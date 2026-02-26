@@ -103096,6 +103096,13 @@ entities:
     - type: Transform
       pos: 70.5,-53.5
       parent: 2
+- proto: SpawnPointHeadOfSecurityWeapon
+  entities:
+  - uid: 15026
+    components:
+    - type: Transform
+      pos: 64.5,-50.5
+      parent: 2
 - proto: SpawnPointJanitor
   entities:
   - uid: 17085
@@ -103443,6 +103450,13 @@ entities:
 - proto: SpawnPointWarden
   entities:
   - uid: 7098
+    components:
+    - type: Transform
+      pos: 54.5,-37.5
+      parent: 2
+- proto: SpawnPointWardenWeapon
+  entities:
+  - uid: 6927
     components:
     - type: Transform
       pos: 54.5,-37.5

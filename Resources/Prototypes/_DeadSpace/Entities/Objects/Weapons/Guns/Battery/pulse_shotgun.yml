@@ -26,7 +26,7 @@
       path: /Audio/Weapons/Guns/Gunshots/laser3.ogg
       params:
         volume: -3
-  - type: ProjectileBatteryAmmoProvider
+  - type: BatteryAmmoProvider
     proto: BulletPulseSpread
     fireCost: 150
   - type: BatteryWeaponFireModes

@@ -66,7 +66,7 @@ public sealed class ATMSystem : SharedATMSystem
         if (!this.IsPowered(uid, EntityManager))
             return;
 
-        UpdateComponentUserInterface(uid, args.Actor);
+        UpdateComponentUserInterface(uid, args.User);
     }
 
     private static readonly ProtoId<MaterialPrototype> Credit = "Credit";

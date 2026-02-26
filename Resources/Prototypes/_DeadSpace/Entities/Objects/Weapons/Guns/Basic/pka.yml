@@ -197,7 +197,7 @@
           True: { visible: False }
           False: { visible: True }
         #todo: add other 'empty' animations
-  - type: ProjectileBatteryAmmoProvider
+  - type: BatteryAmmoProvider
     proto: BulletKinetic
     fireCost: 50
   - type: Gun

@@ -113,6 +113,7 @@
       tags:
       - NukeOpsUplink
   # DS14-end
+  # DS14: UplinkEnergyCrossbow defined in _DeadSpace/Catalog/uplink_catalog.yml
 
 - type: listing
   id: UplinkThrowingKnivesKit
@@ -2730,3 +2731,20 @@
   - !type:BuyerJobCondition
     whitelist:
     - MedicalDoctor
+
+- type: listing
+  id: uplinkBriefcaseGun
+  name: uplink-briefcase-gun-name
+  description: uplink-briefcase-gun-desc
+  productEntity: WeaponSubMachineGunBriefcase
+  discountCategory: veryRareDiscounts
+  discountDownTo:
+    Telecrystal: 10
+  cost:
+    Telecrystal: 15
+  categories:
+  - UplinkJob
+  conditions:
+  - !type:BuyerJobCondition
+    whitelist:
+    - Lawyer

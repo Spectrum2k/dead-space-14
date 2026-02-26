@@ -212,7 +212,7 @@ public sealed partial class NecromorfSystem
             {
                 if (cuffable.Container.ContainedEntities.Count != 0)
                 {
-                    var cuffsToRemove = cuffable.LastAddedCuffs;
+                    var cuffsToRemove = cuffable.Container.ContainedEntities[^1];
                     _cuffs.Uncuff(target, target, cuffsToRemove);
                 }
             }
