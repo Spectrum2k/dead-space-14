@@ -16,7 +16,7 @@
   - type: SpaceGarbage
 
 - type: entity
-  parent: PresentRandom
+  parent: BaseItem
   id: MysteryFigureBox
   name: mystery spacemen minifigure box
   description: A box containing a mystery minifigure. The side of the box depicts a few blacked-out 'rare' figures, including one with a large, non-humanoid shilouette.
@@ -25,8 +25,17 @@
     sprite: Objects/Fun/figurines.rsi
     layers:
       - state: fig_box
-  - type: SpawnItemsOnUse
-    items:
+  - type: TriggerOnActivate
+  - type: DeleteOnTrigger
+  - type: EmitSoundOnTrigger
+    positional: true
+    predicted: true
+    sound:
+      path: /Audio/Effects/unwrap.ogg
+  - type: SpawnEntityTableOnTrigger
+    useMapCoords: true
+    table: !type:AllSelector
+      children:
       - id: MysteryFigureBoxTrash
       - id: ToyFigurinePassenger
         orGroup: SpacemenFig

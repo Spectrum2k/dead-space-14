@@ -53,6 +53,8 @@
     id: ClownPDA
     ears: ClothingHeadsetService
     socks: ClothingUnderwearSocksClown
+  inhand:
+  - FoolboxFilled
   storage:
     back:
     - RubberStampClown

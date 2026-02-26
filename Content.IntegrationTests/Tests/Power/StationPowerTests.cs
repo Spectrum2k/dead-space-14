@@ -1,10 +1,11 @@
 using System.Collections.Generic;
 using System.Linq;
 using Content.Server.GameTicking;
-using Content.Server.Maps;
 using Content.Server.Power.Components;
+using Content.Server.Power.EntitySystems;
 using Content.Server.Power.NodeGroups;
 using Content.Server.Power.Pow3r;
+using Content.Shared.Maps;
 using Content.Shared.Power.Components;
 using Content.Shared.NodeContainer;
 using Robust.Server.GameObjects;
@@ -51,6 +52,8 @@ public sealed class StationPowerTests
         "Origin",
         "Packed",
         "Plasma",
+        "Relic",
+        "Snowball",
         "Reach",
         "Saltern",
         "Train",
@@ -69,6 +72,7 @@ public sealed class StationPowerTests
         var entMan = server.EntMan;
         var protoMan = server.ProtoMan;
         var ticker = entMan.System<GameTicker>();
+        var batterySys = entMan.System<BatterySystem>();
 
         // Load the map
         await server.WaitAssertion(() =>
@@ -92,7 +96,8 @@ public sealed class StationPowerTests
             if (node.NodeGroup is not IBasePowerNet group)
                 continue;
             networks.TryGetValue(group.NetworkNode, out var charge);
-            networks[group.NetworkNode] = charge + battery.CurrentCharge;
+            var currentCharge = batterySys.GetCharge((uid, battery));
+            networks[group.NetworkNode] = charge + currentCharge;
         }
         var totalStartingCharge = networks.MaxBy(n => n.Value).Value;
 

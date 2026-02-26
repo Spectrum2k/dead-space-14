@@ -530,6 +530,12 @@
       collection: VulpkaninWhines
     Howl:
       collection: VulpkaninMaleHowl # DS14
+    Weh:
+      collection: Weh
+    Hew:
+      collection: Hew
+    Honk:
+      collection: BikeHorn
     Gasp:
       collection: MaleGasp
     DefaultDeathgasp:
@@ -564,6 +570,12 @@
       collection: VulpkaninWhines
     Howl:
       collection: VulpkaninFemaleHowl # DS14
+    Weh:
+      collection: Weh
+    Hew:
+      collection: Hew
+    Honk:
+      collection: BikeHorn
     Gasp:
       collection: FemaleGasp
     DefaultDeathgasp:

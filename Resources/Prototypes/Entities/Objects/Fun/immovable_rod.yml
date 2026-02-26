@@ -80,6 +80,8 @@
     damage:
       types:
         Blunt: 70 #DS14
+  - type: Physics
+    bodyType: KinematicController
   - type: InputMover
   - type: MovementSpeedModifier
     baseWeightlessAcceleration: 5

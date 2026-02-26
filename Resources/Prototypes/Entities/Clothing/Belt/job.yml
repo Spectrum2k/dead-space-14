@@ -220,7 +220,6 @@
       - Medkit # DS14
       - CompactDefibrillator # DS14
       components:
-      - Hypospray
       - Injector
       - Pill
       - HandLabeler
@@ -233,7 +232,7 @@
           - Bottle
       hypo:
         whitelist:
-          components:
+          tags:
           - Hypospray
       pill:
         whitelist:
