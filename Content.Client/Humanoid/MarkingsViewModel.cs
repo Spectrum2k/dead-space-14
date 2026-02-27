@@ -54,7 +54,7 @@ public sealed class MarkingsViewModel
         set
         {
             _organProfileData = value.ShallowClone();
-            OrganProfileDataChanged?.Invoke(true);
+            OrganProfileDataChanged?.Invoke();
         }
     }
 
@@ -64,7 +64,7 @@ public sealed class MarkingsViewModel
         {
             _organProfileData[organ] = data with { Sex = sex };
         }
-        OrganProfileDataChanged?.Invoke(true);
+        OrganProfileDataChanged?.Invoke();
     }
 
     public void SetOrganSkinColor(Color skinColor)
@@ -73,7 +73,7 @@ public sealed class MarkingsViewModel
         {
             _organProfileData[organ] = data with { SkinColor = skinColor };
         }
-        OrganProfileDataChanged?.Invoke(false);
+        OrganProfileDataChanged?.Invoke();
     }
 
     public void SetOrganEyeColor(Color eyeColor)
@@ -82,10 +82,10 @@ public sealed class MarkingsViewModel
         {
             _organProfileData[organ] = data with { EyeColor = eyeColor };
         }
-        OrganProfileDataChanged?.Invoke(false);
+        OrganProfileDataChanged?.Invoke();
     }
 
-    public event Action<bool>? OrganProfileDataChanged;
+    public event Action? OrganProfileDataChanged;
 
     private Dictionary<ProtoId<OrganCategoryPrototype>, Dictionary<HumanoidVisualLayers, List<Marking>>> _markings = new();
 
