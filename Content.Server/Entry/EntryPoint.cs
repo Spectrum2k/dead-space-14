@@ -91,7 +91,7 @@ namespace Content.Server.Entry
                 cast.ServerBeforeIoC?.Invoke();
             }
 
-            Dependencies.Resolve<IRobustSerializer>().FloatFlags = SerializerFloatFlags.RemoveReadNan;
+            // FloatFlags API removed from IRobustSerializer in this RT version
         }
 
         /// <inheritdoc />

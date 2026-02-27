@@ -16,6 +16,7 @@ using Robust.Shared.Enums;
 using Robust.Shared.Log;
 using Robust.Shared.Maths;
 using Robust.Shared.Network;
+using Robust.Shared.Prototypes;
 using Robust.UnitTesting;
 
 namespace Content.IntegrationTests.Tests.Preferences
@@ -131,11 +132,8 @@ namespace Content.IntegrationTests.Tests.Preferences
 
         private const string InvalidSpecies = "WingusDingus";
 
-        private static bool[] _trueFalse = [true, false];
-
         [Test]
-        [TestCaseSource(nameof(_trueFalse))]
-        public async Task InvalidSpeciesConversion(bool legacy)
+        public async Task InvalidSpeciesConversion()
         {
             var pair = await PoolManager.GetServerClient();
             var server = pair.Server;
@@ -155,9 +153,6 @@ namespace Content.IntegrationTests.Tests.Preferences
             await db.SaveCharacterSlotAsync(username, bogus, 0);
             await db.SaveSelectedCharacterIndexAsync(username, 0);
 
-            if (legacy)
-                await db.MakeCharacterSlotLegacyAsync(username, 0);
-
             var prefs = await db.GetPlayerPreferencesAsync(username, CancellationToken.None);
 
             Assert.That(prefs, Is.Not.Null);
@@ -166,8 +161,9 @@ namespace Content.IntegrationTests.Tests.Preferences
                 var converted = preferences.ConvertPreferences(prefs);
 
                 Assert.That(converted.Characters, Has.Count.EqualTo(1));
-                Assert.That(converted.Characters[0].Species, Is.Not.EqualTo(InvalidSpecies));
-                Assert.That(converted.Characters[0].Species, Is.EqualTo(HumanoidCharacterProfile.DefaultSpecies));
+                var profile = (HumanoidCharacterProfile)converted.Characters[0];
+                Assert.That(profile.Species, Is.Not.EqualTo(InvalidSpecies));
+                Assert.That(profile.Species, Is.EqualTo(SharedHumanoidAppearanceSystem.DefaultSpecies));
             });
 
             await pair.CleanReturnAsync();

@@ -12,8 +12,11 @@ using Content.Shared.Administration.Logs;
 using Content.Shared.Construction.Prototypes;
 using Content.Shared.Database;
 using Content.Shared.Humanoid;
+using Content.Shared.Humanoid.Markings;
 using Content.Shared.Preferences;
+using Content.Shared.Preferences.Loadouts;
 using Content.Shared.Roles;
+using Content.Shared.Traits;
 using Microsoft.EntityFrameworkCore;
 using Robust.Shared.Enums;
 using Robust.Shared.Network;
@@ -51,22 +54,6 @@ namespace Content.Server.Database
                     .ThenInclude(group => group.Loadouts)
                 .AsSplitQuery()
                 .SingleOrDefaultAsync(p => p.UserId == userId.UserId, cancel);
-
-            if (prefs is null)
-                return null;
-
-            var maxSlot = prefs.Profiles.Max(p => p.Slot) + 1;
-            var profiles = new Dictionary<int, ICharacterProfile>(maxSlot);
-            foreach (var profile in prefs.Profiles)
-            {
-                profiles[profile.Slot] = ConvertProfiles(profile);
-            }
-
-            var constructionFavorites = new List<ProtoId<ConstructionPrototype>>(prefs.ConstructionFavorites.Count);
-            foreach (var favorite in prefs.ConstructionFavorites)
-                constructionFavorites.Add(new ProtoId<ConstructionPrototype>(favorite));
-
-            return new PlayerPreferences(profiles, prefs.SelectedCharacterSlot, Color.FromHex(prefs.AdminOOCColor), constructionFavorites);
         }
 
         public async Task SaveSelectedCharacterIndexAsync(NetUserId userId, int index)
@@ -74,30 +61,6 @@ namespace Content.Server.Database
             await using var db = await GetDb();
 
             await SetSelectedCharacterSlotAsync(userId, index, db.DbContext);
-
-            await db.DbContext.SaveChangesAsync();
-        }
-
-        /// <summary>
-        /// Only intended for use in unit tests - drops the organ marking data from a profile in the given slot
-        /// </summary>
-        /// <param name="userId">The user whose profile to modify</param>
-        /// <param name="slot">The slot index to modify</param>
-        public async Task MakeCharacterSlotLegacyAsync(NetUserId userId, int slot)
-        {
-            await using var db = await GetDb();
-
-            var oldProfile = await db.DbContext.Profile
-                .Include(p => p.Preference)
-                .Where(p => p.Preference.UserId == userId.UserId)
-                .AsSplitQuery()
-                .SingleOrDefaultAsync(h => h.Slot == slot);
-
-            if (oldProfile == null)
-                return;
-
-            oldProfile.OrganMarkings = null;
-            oldProfile.Markings = JsonSerializer.SerializeToDocument(new List<string>());
 
             await db.DbContext.SaveChangesAsync();
         }
