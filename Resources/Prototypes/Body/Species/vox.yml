@@ -160,7 +160,7 @@
   - AppearanceVox
   - BaseSpeciesMobOrganic
   id: MobVox
-  name: Urist McVox
+  name: Uristititi McVox
   components:
   - type: Damageable
     damageModifierSet: Vox
