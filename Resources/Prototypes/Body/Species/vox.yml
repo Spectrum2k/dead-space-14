@@ -59,9 +59,6 @@
       limit: 1
       required: true
       default: [ VoxTail ]
-    enum.HumanoidVisualLayers.TailOverlay:
-      limit: 1
-      required: false
     enum.HumanoidVisualLayers.UndergarmentTop:
       limit: 1
       required: false
