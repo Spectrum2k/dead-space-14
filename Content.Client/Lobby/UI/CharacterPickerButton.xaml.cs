@@ -33,7 +33,7 @@ public sealed partial class CharacterPickerButton : ContainerButton
         IEntityManager entityManager,
         IPrototypeManager prototypeManager,
         ButtonGroup group,
-        HumanoidCharacterProfile profile,
+        ICharacterProfile profile,
         bool isSelected)
     {
         RobustXamlLoader.Load(this);

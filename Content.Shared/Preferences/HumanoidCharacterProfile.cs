@@ -28,7 +28,7 @@ namespace Content.Shared.Preferences
     /// </summary>
     [DataDefinition]
     [Serializable, NetSerializable]
-    public sealed partial class HumanoidCharacterProfile
+    public sealed partial class HumanoidCharacterProfile : ICharacterProfile
     {
         public static readonly ProtoId<SpeciesPrototype> DefaultSpecies = "Human";
         private static readonly Regex RestrictedNameRegex = new(@"[^A-Za-z0-9 '\-]");
@@ -88,6 +88,11 @@ namespace Content.Shared.Preferences
 
         [DataField]
         public Gender Gender { get; private set; } = Gender.Male;
+
+        /// <summary>
+        /// <see cref="Appearance"/>
+        /// </summary>
+        public ICharacterAppearance CharacterAppearance => Appearance;
 
         /// <summary>
         /// Stores markings, eye colors, etc for the profile.
@@ -460,8 +465,9 @@ namespace Content.Shared.Preferences
                 ("age", Age)
             );
 
-        public bool MemberwiseEquals(HumanoidCharacterProfile other)
+        public bool MemberwiseEquals(ICharacterProfile maybeOther)
         {
+            if (maybeOther is not HumanoidCharacterProfile other) return false;
             if (Name != other.Name) return false;
             if (Age != other.Age) return false;
             if (Sex != other.Sex) return false;
@@ -474,7 +480,7 @@ namespace Content.Shared.Preferences
             if (!_traitPreferences.SequenceEqual(other._traitPreferences)) return false;
             if (!Loadouts.SequenceEqual(other.Loadouts)) return false;
             if (FlavorText != other.FlavorText) return false;
-            return Appearance.Equals(other.Appearance);
+            return Appearance.MemberwiseEquals(other.Appearance);
         }
 
         public void EnsureValid(ICommonSession session, IDependencyCollection collection)
@@ -686,7 +692,7 @@ namespace Content.Shared.Preferences
             return result;
         }
 
-        public HumanoidCharacterProfile Validated(ICommonSession session, IDependencyCollection collection)
+        public ICharacterProfile Validated(ICommonSession session, IDependencyCollection collection)
         {
             var profile = new HumanoidCharacterProfile(this);
             profile.EnsureValid(session, collection);

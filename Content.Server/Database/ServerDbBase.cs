@@ -88,15 +88,21 @@ namespace Content.Server.Database
             await db.DbContext.SaveChangesAsync();
         }
 
-        public async Task SaveCharacterSlotAsync(NetUserId userId, HumanoidCharacterProfile? humanoid, int slot)
+        public async Task SaveCharacterSlotAsync(NetUserId userId, ICharacterProfile? profile, int slot)
         {
             await using var db = await GetDb();
 
-            if (humanoid is null)
+            if (profile is null)
             {
                 await DeleteCharacterSlot(db.DbContext, userId, slot);
                 await db.DbContext.SaveChangesAsync();
                 return;
+            }
+
+            if (profile is not HumanoidCharacterProfile humanoid)
+            {
+                // TODO: Handle other ICharacterProfile implementations properly
+                throw new NotImplementedException();
             }
 
             var oldProfile = db.DbContext.Profile
@@ -139,7 +145,7 @@ namespace Content.Server.Database
             db.Profile.Remove(profile);
         }
 
-        public async Task<Preference> InitPrefsAsync(NetUserId userId, HumanoidCharacterProfile defaultProfile)
+        public async Task<Preference> InitPrefsAsync(NetUserId userId, ICharacterProfile defaultProfile)
         {
             await using var db = await GetDb();
 
@@ -206,7 +212,7 @@ namespace Content.Server.Database
         private Profile ConvertProfiles(HumanoidCharacterProfile humanoid, int slot, Profile? profile = null)
         {
             profile ??= new Profile();
-            var appearance = humanoid.Appearance;
+            var appearance = (HumanoidCharacterAppearance) humanoid.CharacterAppearance;
             var dataNode = _serialization.WriteValue(appearance.Markings, alwaysWrite: true, notNullableOverride: true);
 
             profile.CharacterName = humanoid.Name;

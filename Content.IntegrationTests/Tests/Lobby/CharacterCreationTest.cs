@@ -75,10 +75,16 @@ public sealed class CharacterCreationTest
         await pair.CleanReturnAsync();
     }
 
-    private void AssertEqual(HumanoidCharacterProfile a, HumanoidCharacterProfile b)
+    private void AssertEqual(ICharacterProfile clientCharacter, HumanoidCharacterProfile b)
     {
-        if (a.MemberwiseEquals(b))
+        if (clientCharacter.MemberwiseEquals(b))
             return;
+
+        if (clientCharacter is not HumanoidCharacterProfile a)
+        {
+            Assert.Fail($"Not a {nameof(HumanoidCharacterProfile)}");
+            return;
+        }
 
         Assert.Multiple(() =>
         {
@@ -101,7 +107,7 @@ public sealed class CharacterCreationTest
 
     private void AssertEqual(HumanoidCharacterAppearance a, HumanoidCharacterAppearance b)
     {
-        if (a.Equals(b))
+        if (a.MemberwiseEquals(b))
             return;
 
         Assert.That(a.EyeColor, Is.EqualTo(b.EyeColor));
