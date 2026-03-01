@@ -3,10 +3,11 @@ using System.Text.Json.Serialization;
 using Content.Shared.Damage.Components;
 using Content.Shared.Damage.Prototypes;
 using Content.Shared.FixedPoint;
+using JetBrains.Annotations;
 using Robust.Shared.Prototypes;
+using Robust.Shared.Serialization.TypeSerializers.Implementations.Custom.Prototype.Dictionary;
 using Robust.Shared.Utility;
 using Robust.Shared.Serialization;
-// Note: avoid using Serilog directly in Content.Shared (sandboxed).
 
 namespace Content.Shared.Damage
 {
@@ -25,32 +26,38 @@ namespace Content.Shared.Damage
         // One day Arrays, stackalloc spans, and SIMD will save the day.
         // TODO DAMAGEABLE REFACTOR
 
+        // These exist solely so the wiki works. Please do not touch them or use them.
+        [JsonPropertyName("types")]
+        [DataField("types", customTypeSerializer: typeof(PrototypeIdDictionarySerializer<FixedPoint2, DamageTypePrototype>))]
+        [UsedImplicitly]
+        private Dictionary<string, FixedPoint2>? _damageTypeDictionary;
+
+        [JsonPropertyName("groups")]
+        [DataField("groups", customTypeSerializer: typeof(PrototypeIdDictionarySerializer<FixedPoint2, DamageGroupPrototype>))]
+        [UsedImplicitly]
+        private Dictionary<string, FixedPoint2>? _damageGroupDictionary;
+
         /// <summary>
         ///     Main DamageSpecifier dictionary. Most DamageSpecifier functions exist to somehow modifying this.
         /// </summary>
-        [DataField("types")]
+        [JsonIgnore]
+        [ViewVariables(VVAccess.ReadWrite)]
+        [IncludeDataField(customTypeSerializer: typeof(DamageSpecifierDictionarySerializer), readOnly: true)]
         public Dictionary<string, FixedPoint2> DamageDict { get; set; } = new();
 
         // DS14-Start
-        // Per-damage-type armor piercing levels. Can be set from prototypes via the
-        // `armorPiercingLevels` data-field or using the helper methods below.
-        [DataField("armorPiercingLevels")]
-        private Dictionary<string, int>? _damageTypeArmorPiercingLevel = new();
-
         /// <summary>
-        ///     Set per-type armor piercing level for a damage type.
+        ///     Per-damage-type armor piercing levels.
         /// </summary>
+        [DataField("armorPiercingLevels")]
+        private Dictionary<string, int>? _damageTypeArmorPiercingLevel;
+
         public void SetArmorPiercingLevelForType(string damageType, int level)
         {
-            if (_damageTypeArmorPiercingLevel == null)
-                _damageTypeArmorPiercingLevel = new Dictionary<string, int>();
-
+            _damageTypeArmorPiercingLevel ??= new Dictionary<string, int>();
             _damageTypeArmorPiercingLevel[damageType] = level;
         }
 
-        /// <summary>
-        ///     Try get per-type armor piercing level, falling back to the global `ArmorPiercingLevel`.
-        /// </summary>
         public int GetArmorPiercingLevelForType(string damageType)
         {
             if (_damageTypeArmorPiercingLevel != null && _damageTypeArmorPiercingLevel.TryGetValue(damageType, out var v))
@@ -117,9 +124,8 @@ namespace Content.Shared.Damage
             DamageDict = new(damageSpec.DamageDict);
 
             // DS14-Start
-            _damageTypeArmorPiercingLevel = damageSpec._damageTypeArmorPiercingLevel != null
-                ? new Dictionary<string, int>(damageSpec._damageTypeArmorPiercingLevel)
-                : new Dictionary<string, int>();
+            if (damageSpec._damageTypeArmorPiercingLevel != null)
+                _damageTypeArmorPiercingLevel = new Dictionary<string, int>(damageSpec._damageTypeArmorPiercingLevel);
             // DS14-End
         }
 
@@ -159,10 +165,10 @@ namespace Content.Shared.Damage
         /// </remarks>
         public static DamageSpecifier ApplyModifierSet(DamageSpecifier damageSpec, DamageModifierSet modifierSet)
         {
-            // Make a copy of the given data. Preserve per-type AP dictionary, but start with an empty DamageDict
-            // so we only add modified entries.
-            DamageSpecifier newDamage = new(damageSpec);
-            newDamage.DamageDict.Clear();
+            // Make a copy of the given data. Don't modify the one passed to this function. I did this before, and weapons became
+            // duller as you hit walls. Neat, but not FixedPoint2ended. And confusing, when you realize your fists don't work no
+            // more cause they're just bloody stumps.
+            DamageSpecifier newDamage = new();
             newDamage.DamageDict.EnsureCapacity(damageSpec.DamageDict.Count);
 
             foreach (var (key, value) in damageSpec.DamageDict)
@@ -182,8 +188,6 @@ namespace Content.Shared.Damage
                     newValue = Math.Max(0f, newValue - reduction); // flat reductions can't heal you
 
                 // DS14-Start
-                // Temporary debug log to inspect armor piercing and armor levels (use project's Logger)
-
                 int apLevelForType = damageSpec._damageTypeArmorPiercingLevel != null &&
                                     damageSpec._damageTypeArmorPiercingLevel.TryGetValue(key, out var typeAp)
                                     ? typeAp
@@ -206,13 +210,10 @@ namespace Content.Shared.Damage
                     newDamage.DamageDict[key] = FixedPoint2.New(newValue);
                     continue;
                 }
-
-                var modifierId = (modifierSet as DamageModifierSetPrototype)?.ID ?? "(no-id)";
-                if (modifierSet.Coefficients.TryGetValue(key, out var coefficient))
-                {
-                    newValue *= coefficient; // coefficients can heal you, e.g. cauterizing bleeding
-                }
                 // DS14-End
+
+                if (modifierSet.Coefficients.TryGetValue(key, out var coefficient))
+                    newValue *= coefficient; // coefficients can heal you, e.g. cauterizing bleeding
 
                 if (newValue != 0)
                     newDamage.DamageDict[key] = FixedPoint2.New(newValue);
@@ -405,49 +406,42 @@ namespace Content.Shared.Damage
         #region Operators
         public static DamageSpecifier operator *(DamageSpecifier damageSpec, FixedPoint2 factor)
         {
-            DamageSpecifier newDamage = new(damageSpec);
-
+            DamageSpecifier newDamage = new();
             foreach (var entry in damageSpec.DamageDict)
             {
-                newDamage.DamageDict[entry.Key] = entry.Value * factor;
+                newDamage.DamageDict.Add(entry.Key, entry.Value * factor);
             }
-
             return newDamage;
         }
 
         public static DamageSpecifier operator *(DamageSpecifier damageSpec, float factor)
         {
-            DamageSpecifier newDamage = new(damageSpec);
-
+            DamageSpecifier newDamage = new();
             foreach (var entry in damageSpec.DamageDict)
             {
-                newDamage.DamageDict[entry.Key] = entry.Value * factor;
+                newDamage.DamageDict.Add(entry.Key, entry.Value * factor);
             }
-
             return newDamage;
         }
 
         public static DamageSpecifier operator /(DamageSpecifier damageSpec, FixedPoint2 factor)
         {
-            DamageSpecifier newDamage = new(damageSpec);
-
+            DamageSpecifier newDamage = new();
             foreach (var entry in damageSpec.DamageDict)
             {
-                newDamage.DamageDict[entry.Key] = entry.Value / factor;
+                newDamage.DamageDict.Add(entry.Key, entry.Value / factor);
             }
-
             return newDamage;
         }
 
         public static DamageSpecifier operator /(DamageSpecifier damageSpec, float factor)
         {
-            DamageSpecifier newDamage = new(damageSpec);
+            DamageSpecifier newDamage = new();
 
             foreach (var entry in damageSpec.DamageDict)
             {
-                newDamage.DamageDict[entry.Key] = entry.Value / factor;
+                newDamage.DamageDict.Add(entry.Key, entry.Value / factor);
             }
-
             return newDamage;
         }
 

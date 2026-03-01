@@ -26,9 +26,6 @@ using Robust.Shared.Player;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Serialization;
 using Robust.Shared.Timing;
-using Content.Shared.Damage.Prototypes;
-using Content.Shared.FixedPoint;
-using Robust.Shared.Prototypes;
 
 namespace Content.Shared.Damage.Systems;
 
@@ -39,7 +36,6 @@ public abstract partial class SharedStaminaSystem : EntitySystem
     [Dependency] private readonly IConfigurationManager _config = default!;
     [Dependency] protected readonly IGameTiming Timing = default!;
     [Dependency] private readonly INetManager _net = default!;
-    [Dependency] private readonly IPrototypeManager _proto = default!;
     [Dependency] private readonly ISharedAdminLogManager _adminLogger = default!;
     [Dependency] private readonly AlertsSystem _alerts = default!;
     [Dependency] private readonly MetaDataSystem _metadata = default!;
@@ -287,14 +283,6 @@ public abstract partial class SharedStaminaSystem : EntitySystem
         // Have we already reached the point of max stamina damage?
         if (component.Critical)
             return;
-
-        var damage = new DamageSpecifier(_proto.Index<DamageTypePrototype>("Stun"), FixedPoint2.New(value));
-        var modifyEv = new DamageModifyEvent(damage);
-        RaiseLocalEvent(uid, modifyEv);
-        if (modifyEv.Damage.DamageDict.ContainsKey("Stun"))
-        {
-            value = modifyEv.Damage.DamageDict["Stun"].Float();
-        }
 
         var oldDamage = component.StaminaDamage;
         component.StaminaDamage = MathF.Max(0f, component.StaminaDamage + value);

@@ -1,6 +1,5 @@
 using System.Linq;
 using Content.Shared.Damage.Prototypes;
-using Content.Shared.Damage.Systems;
 using Content.Shared.FixedPoint;
 using Content.Shared.Ghost;
 using Content.Shared.Mind;
@@ -12,7 +11,6 @@ namespace Content.Shared.GhostTypes;
 
 public sealed class GhostSpriteStateSystem : EntitySystem
 {
-    [Dependency] private readonly DamageableSystem _damageable = default!;
     [Dependency] private readonly SharedAppearanceSystem _appearance = default!;
     [Dependency] private readonly IGameTiming _timing = default!;
     [Dependency] private readonly IPrototypeManager _proto = default!;
@@ -36,7 +34,17 @@ public sealed class GhostSpriteStateSystem : EntitySystem
 
         if (storedDamage.DamagePerGroup != null && storedDamage.Damage != null)
         {
-            damageTypes = _damageable.GetDamages(storedDamage.DamagePerGroup, storedDamage.Damage);
+            foreach (var (damageGroupId, _) in storedDamage.DamagePerGroup)
+            {
+                var group = _proto.Index<DamageGroupPrototype>(damageGroupId);
+                foreach (var type in group.DamageTypes)
+                {
+                    if (!storedDamage.Damage.DamageDict.TryGetValue(type, out var damageValue) || damageValue == 0)
+                        continue;
+
+                    damageTypes.TryAdd(type, damageValue);
+                }
+            }
         }
         specialCase = storedDamage.SpecialCauseOfDeath;
 

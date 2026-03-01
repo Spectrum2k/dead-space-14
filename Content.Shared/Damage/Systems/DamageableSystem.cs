@@ -1,9 +1,6 @@
 using System.Linq;
-using Content.Shared.Chemistry;
 using Content.Shared.Damage.Components;
-using Content.Shared.Damage.Prototypes;
 using Content.Shared.Explosion.EntitySystems;
-using Content.Shared.FixedPoint;
 using Content.Shared.Mobs.Systems;
 using Robust.Shared.Configuration;
 using Robust.Shared.GameStates;
@@ -17,9 +14,10 @@ public sealed partial class DamageableSystem : EntitySystem
 {
     [Dependency] private readonly IPrototypeManager _prototypeManager = default!;
     [Dependency] private readonly SharedAppearanceSystem _appearance = default!;
+    [Dependency] private readonly INetManager _netMan = default!;
     [Dependency] private readonly MobThresholdSystem _mobThreshold = default!;
     [Dependency] private readonly IConfigurationManager _config = default!;
-    [Dependency] private readonly SharedChemistryGuideDataSystem _chemistryGuideData = default!;
+
     [Dependency] private readonly SharedExplosionSystem _explosion = default!;
 
     private EntityQuery<AppearanceComponent> _appearanceQuery;
@@ -36,8 +34,6 @@ public sealed partial class DamageableSystem : EntitySystem
     public float UniversalThrownDamageModifier { get; private set; } = 1f;
     public float UniversalTopicalsHealModifier { get; private set; } = 1f;
     public float UniversalMobDamageModifier { get; private set; } = 1f;
-
-    private Dictionary<ProtoId<DamageContainerPrototype>, HashSet<ProtoId<DamageTypePrototype>>> _supportedTypesByContainer = new();
 
     /// <summary>
     ///     If the damage in a DamageableComponent was changed this function should be called.
@@ -72,25 +68,29 @@ public sealed partial class DamageableSystem : EntitySystem
         RaiseLocalEvent(ent, new DamageChangedEvent(ent.Comp, damageDelta, interruptsDoAfters, origin));
     }
 
-    /// <summary>
-    /// Goes through an entity damage's and saves them inside a dictionary if the value is higher than 0
-    /// The dictionary is structured with a string for the name of the damage type, and a FixedPoint2 for the numeric damage value
-    /// </summary>
-    public Dictionary<ProtoId<DamageTypePrototype>, FixedPoint2> GetDamages(Dictionary<ProtoId<DamageGroupPrototype>, FixedPoint2> damagePerGroup, DamageSpecifier damage)
+    private void DamageableGetState(Entity<DamageableComponent> ent, ref ComponentGetState args)
     {
-        var damageTypes = new Dictionary<ProtoId<DamageTypePrototype>, FixedPoint2>();
-
-        foreach (var (damageGroupId, _) in damagePerGroup)  //go through each group
+        if (_netMan.IsServer)
         {
-            var group = _prototypeManager.Index<DamageGroupPrototype>(damageGroupId);  //get group
-            foreach (var type in group.DamageTypes) //go through each type inside that group
-            {
-                if (!damage.DamageDict.TryGetValue(type, out var damageValue) || damageValue == 0) //get value and make sure it isn't 0
-                    continue;
+            args.State = new DamageableComponentState(
+                ent.Comp.Damage.DamageDict,
+                ent.Comp.DamageContainerID,
+                ent.Comp.DamageModifierSetId,
+                ent.Comp.HealthBarThreshold
+            );
+            // TODO BODY SYSTEM pass damage onto body system
+            // BOBBY WHEN? 😭
+            // BOBBY SOON 🫡
 
-                damageTypes.Add(type, damageValue);
-            }
+            return;
         }
-        return damageTypes;
+
+        // avoid mispredicting damage on newly spawned entities.
+        args.State = new DamageableComponentState(
+            ent.Comp.Damage.DamageDict.ShallowClone(),
+            ent.Comp.DamageContainerID,
+            ent.Comp.DamageModifierSetId,
+            ent.Comp.HealthBarThreshold
+        );
     }
 }
