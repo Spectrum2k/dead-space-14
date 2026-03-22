@@ -503,8 +503,8 @@
     heldPrefix: box
   - type: Storage
     maxItemSize: Normal
-    # grid: # DS14
-    # - 0,0,3,3
+    grid:
+    - 0,0,3,3
   - type: Tag
     tags:
     - Trash
@@ -624,9 +624,9 @@
   suffix: Toy Unsafe, Snacks
   name: syndicate snack box
   components:
-  # - type: Storage # DS14
-  #   grid:
-  #   - 0,0,5,2
+  - type: Storage
+    grid:
+    - 0,0,5,2
   - type: StorageFill
     contents:
     # toy

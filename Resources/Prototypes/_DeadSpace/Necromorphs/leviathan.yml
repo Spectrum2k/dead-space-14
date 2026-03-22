@@ -223,11 +223,15 @@
   id: MobLeviathanNecro
   suffix: Некроморф
   components:
+  - type: Transform
+    anchored: false
   - type: WallHack
   - type: Leviathan
   - type: ImmunNecroobelisk
   - type: ZombieImmune
   - type: Necromorf
+  - type: Physics
+    bodyType: KinematicController
   - type: Destructible
     thresholds:
     - trigger:
@@ -250,11 +254,11 @@
         shape:
           !type:PhysShapeAabb
           bounds: "-0.45,-0.45,0.45,0.45"
-        density: 60
+        mass: 60
         mask:
-          - MachineMask
+          - MobMask
         layer:
-          - MachineLayer
+          - MobLayer
   - type: CombatMode
   - type: MeleeWeapon
     range: 2
