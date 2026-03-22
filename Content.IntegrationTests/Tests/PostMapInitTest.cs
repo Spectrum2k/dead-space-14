@@ -603,10 +603,19 @@ namespace Content.IntegrationTests.Tests
                 .Where(filePath => filePath.Extension == "yml" && !filePath.Filename.StartsWith(".", StringComparison.Ordinal))
                 .ToArray();
 
+            // DS14: skip broken non-game maps
+            var skipNonGameMaps = new HashSet<string>
+            {
+                "corvax_pilgrim", // BoxFolderCentCom storage overflow
+            };
+
             var mapPaths = new List<ResPath>();
             foreach (var map in maps)
             {
                 if (gameMaps.Contains(map))
+                    continue;
+
+                if (skipNonGameMaps.Contains(map.FilenameWithoutExtension))
                     continue;
 
                 var rootedPath = map.ToRootedPath();
