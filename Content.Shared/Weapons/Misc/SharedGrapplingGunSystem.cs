@@ -242,6 +242,38 @@ public abstract class SharedGrapplingGunSystem : VirtualController
 
                 continue;
             }
+            //DS14-start
+            if (grappling.PullTargetToShooter)
+            {
+                if (grappling.Projectile != null &&
+                    TryComp<GrapplingProjectileComponent>(grappling.Projectile.Value, out var projectile) && 
+                    projectile.HitTarget != null)
+                {
+                    var target = projectile.HitTarget.Value;
+
+                    if (!TryComp<PhysicsComponent>(target, out var physicsTarget))
+                    {
+                        SetReeling(uid, grappling, false, null);
+                    }
+                    else
+                    {
+                        var posShooter = Transform(uid).WorldPosition;
+                        var posTarget = Transform(target).WorldPosition;
+                        var direction = posShooter - posTarget;
+
+                        if (direction.LengthSquared() > 0.1f)
+                        {
+                            direction = Vector2.Normalize(direction);
+                            var impulse = direction * grappling.ReelRate * frameTime * physicsTarget.Mass;
+
+                            _physics.ApplyLinearImpulse(target, impulse);
+                            _physics.WakeBody(target);
+                        }
+                    }
+                }
+                continue;
+            }
+            //DS14-end
 
 
             // TODO: Contracting DistanceJoints should be in engine
@@ -278,7 +310,6 @@ public abstract class SharedGrapplingGunSystem : VirtualController
             Dirty(uid, jointComp);
         }
     }
-
     /// <summary>
     /// Checks whether the entity is hooked to something via grappling gun.
     /// </summary>
@@ -302,6 +333,8 @@ public abstract class SharedGrapplingGunSystem : VirtualController
     {
         if (!Timing.IsFirstTimePredicted || !args.Weapon.HasValue || !_entities.TryGetComponent<GrapplingGunComponent>(args.Weapon, out var grapple))
             return;
+
+        component.HitTarget = args.Embedded; // DS14
 
         var grapplePos = _transform.GetWorldPosition(args.Weapon.Value);
         var hookPos = _transform.GetWorldPosition(uid);

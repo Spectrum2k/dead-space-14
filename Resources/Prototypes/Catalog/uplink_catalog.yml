@@ -286,7 +286,7 @@
   discountDownTo:
     Telecrystal: 11
   cost:
-    Telecrystal: 18
+    Telecrystal: 16 # DS14-value
   categories:
   - UplinkWeaponry
 
@@ -971,7 +971,7 @@
   discountDownTo:
     Telecrystal: 16
   cost:
-    Telecrystal: 24
+    Telecrystal: 20 # DS14-value
   categories:
   - UplinkChemicals
   conditions:
@@ -2162,7 +2162,7 @@
   icon: { sprite: /Textures/Structures/Storage/Crates/syndicate.rsi, state: icon }
   productEntity: CrateCybersunJuggernautBundle
   cost:
-    Telecrystal: 38 # DS14-value
+    Telecrystal: 50 # DS14-value
   categories:
   - UplinkWearables
   conditions:

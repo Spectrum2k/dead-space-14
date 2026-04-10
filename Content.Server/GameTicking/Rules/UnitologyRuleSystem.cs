@@ -502,7 +502,7 @@ public sealed class UnitologyRuleSystem : GameRuleSystem<UnitologyRuleComponent>
 
                 var printout = new FaxPrintout(
                     content,
-                    Loc.GetString("nuke-codes-fax-paper-name"),
+                    Loc.GetString("paper-order-necromorph"),
                     null,
                     null,
                     "paper_stamp-centcom",

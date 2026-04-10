@@ -148,8 +148,8 @@ public sealed class ZombieBlobSystem : EntitySystem
         // DS14-start
         var lang = EnsureComp<LanguageComponent>(uid);
 
-        component.OldLanguages = new List<ProtoId<LanguagePrototype>>(lang.KnownLanguages); // DS14-Soyuz
-        component.OldSelectedLanguage = lang.SelectedLanguage; //DS14-Soyuz
+        component.OldLanguages = new List<ProtoId<LanguagePrototype>>(lang.KnownLanguages);
+        component.OldSelectedLanguage = lang.SelectedLanguage;
 
         lang.KnownLanguages.Clear();
 
@@ -227,7 +227,7 @@ public sealed class ZombieBlobSystem : EntitySystem
             }
             component.DisabledFixtureMasks.Clear();
         }
-        // DS14-Soyuz start
+        // DS14 start
         if (TryComp<LanguageComponent>(uid, out var lang))
         {
             lang.KnownLanguages.Clear();
@@ -240,7 +240,7 @@ public sealed class ZombieBlobSystem : EntitySystem
             if (component.OldSelectedLanguage != null)
                 lang.SelectedLanguage = component.OldSelectedLanguage.Value;
         }
-        // DS14-Soyuz end
+        // DS14 end
     }
 
     private void OnMobStateChanged(EntityUid uid, ZombieBlobComponent component, MobStateChangedEvent args)
