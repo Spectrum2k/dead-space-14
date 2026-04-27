@@ -8,3 +8,10 @@ Entries:
     message: Тестовая запись для проверки авточенжлога.
   - type: Fix
     message: Тестовая запись для проверки авточенжлога.
+- id: 2
+  author: CyberBobeks
+  time: '2026-04-27T19:01:04.752653+00:00'
+  pr: 1273
+  changes:
+  - type: Fix
+    message: Логика выполнения теста ForceMap.
