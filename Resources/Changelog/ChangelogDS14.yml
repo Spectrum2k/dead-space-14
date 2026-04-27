@@ -1,1 +1,10 @@
-Entries: []
+Entries:
+- id: 1
+  author: rhailrake
+  time: '2026-04-27T18:25:20.242797+00:00'
+  pr: 1272
+  changes:
+  - type: Add
+    message: Тестовая запись для проверки авточенжлога.
+  - type: Fix
+    message: Тестовая запись для проверки авточенжлога.
