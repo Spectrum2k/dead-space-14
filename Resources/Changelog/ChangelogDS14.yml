@@ -15,3 +15,12 @@ Entries:
   changes:
   - type: Fix
     message: Логика выполнения теста ForceMap.
+- id: 3
+  author: CyberBobeks
+  time: '2026-04-27T20:48:01.733526+00:00'
+  pr: 1264
+  changes:
+  - type: Tweak
+    message: Система спавна шаттлов ОБР (добавлены специальные тэги, которые определяют
+      точное место спавна шаттла. Если отсутствует определённый тэг - шаттл спавнится
+      на стандартных стыках ОБР "AirlockExternalGlassShuttleCentcommERTLocked").
