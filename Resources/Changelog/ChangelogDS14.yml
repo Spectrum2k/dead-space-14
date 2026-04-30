@@ -114,3 +114,10 @@ Entries:
   - type: Tweak
     message: Экспедиция шахт теперь в стиле заброшеной шахты последователей ратвара
       (много латуни), by Rino_Kobayashi
+- id: 15
+  author: CyberBobeks
+  time: '2026-04-30T08:54:32.900044+00:00'
+  pr: 1285
+  changes:
+  - type: Add
+    message: Скрытие слоёв тела в HideLayerClothing (bodyLayers).
