@@ -106,3 +106,11 @@ Entries:
   changes:
   - type: Add
     message: Компонент для изменения приоритета отрисовки слоёв.
+- id: 14
+  author: TheZuTi
+  time: '2026-04-30T08:52:52.443999+00:00'
+  pr: 1284
+  changes:
+  - type: Tweak
+    message: Экспедиция шахт теперь в стиле заброшеной шахты последователей ратвара
+      (много латуни), by Rino_Kobayashi
