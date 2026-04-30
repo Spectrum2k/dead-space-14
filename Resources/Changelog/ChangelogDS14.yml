@@ -128,3 +128,10 @@ Entries:
   changes:
   - type: Fix
     message: Баг невидимых пауков ужаса исправлен
+- id: 17
+  author: CyberBobeks
+  time: '2026-04-30T12:50:13.022914+00:00'
+  pr: 1286
+  changes:
+  - type: Fix
+    message: Требования по времени для Эскадрона Смерти.
