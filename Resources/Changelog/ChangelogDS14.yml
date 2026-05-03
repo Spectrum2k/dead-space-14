@@ -191,3 +191,10 @@ Entries:
   changes:
   - type: Add
     message: Фултоны в поперечный модуль шахтёрского борга.
+- id: 24
+  author: Djentelmen2
+  time: '2026-05-03T17:13:48.779166+00:00'
+  pr: 1298
+  changes:
+  - type: Add
+    message: Зрение КПБ теперь лечится нанопастой. АХ.
