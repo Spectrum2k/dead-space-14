@@ -254,3 +254,24 @@ Entries:
     message: Цены у разумного вируса снижено в раза 3, пассивные очки теперь повышены
       с 2 до 5 очков. Plague Inc is coming. Plague Inc is coming. Plague Inc is coming.
       Plague Inc is coming. Plague Inc is coming...
+- id: 31
+  author: Non-stop-smetana
+  time: '2026-05-04T11:55:33.664258+00:00'
+  pr: 1293
+  changes:
+  - type: Add
+    message: Добавлена частота КСО для ОБР
+  - type: Add
+    message: Доступ ОСО для ограничения ОБРов
+  - type: Add
+    message: Новые плакаты для ОБР и ОБХУ, а также АПБТ!
+  - type: Add
+    message: Добавлен новый питомец - Авава ЦентКомович
+  - type: Add
+    message: Добавлена печать для АЦК
+  - type: Add
+    message: КРУПНОЕ ОБНОВЛЕНИЕ ЦЕНТРАЛЬНОГО КОМАНДОВАНИЯ!!!!
+  - type: Add
+    message: Добавлены плюшевые игрушки в качестве награды мапперам
+  - type: Tweak
+    message: Теперь при ОСО есть грозное оружие, а у всего ОБР вырезан Супер-Пульт!
