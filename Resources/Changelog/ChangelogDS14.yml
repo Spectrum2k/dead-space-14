@@ -349,3 +349,11 @@ Entries:
   - type: Tweak
     message: Логика работы режима "выживание", изменена логика спавна и распределения
       антагонистов в раунде.
+- id: 39
+  author: MTF97
+  time: '2026-05-05T18:27:08.024913+00:00'
+  pr: 1310
+  changes:
+  - type: Tweak
+    message: Карты CorvaxPaper, CorvaxAstra, CorvaxSpectrum, Oasis подогнаны под новый
+      баланс оружейных.
