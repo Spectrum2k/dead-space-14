@@ -357,3 +357,11 @@ Entries:
   - type: Tweak
     message: Карты CorvaxPaper, CorvaxAstra, CorvaxSpectrum, Oasis подогнаны под новый
       баланс оружейных.
+- id: 40
+  author: CyberBobeks
+  time: '2026-05-05T18:32:26.908621+00:00'
+  pr: 1223
+  changes:
+  - type: Fix
+    message: Замена слов в TTS, которая неправильно воспроизводила или игнорировала
+      замену немецкого акцента.
