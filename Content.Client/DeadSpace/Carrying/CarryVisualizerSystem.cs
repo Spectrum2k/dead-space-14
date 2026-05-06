@@ -1,5 +1,6 @@
 // Мёртвый Космос, Licensed under custom terms with restrictions on public hosting and commercial use, full text: https://raw.githubusercontent.com/dead-space-server/space-station-14-fobos/master/LICENSE.TXT
 
+using System;
 using System.Linq;
 using System.Numerics;
 using Content.Shared.DeadSpace.Carrying;
@@ -71,10 +72,11 @@ public sealed class CarryVisualizerSystem : EntitySystem
         }
 
         var state = _states[ent.Owner];
+
         var angle = _transform.GetWorldRotation(carrier) + _eye.CurrentEye.Rotation;
         var direction = angle.GetCardinalDir();
-
         var isHumanoid = HasComp<HumanoidAppearanceComponent>(ent.Owner);
+
         var offset = isHumanoid
             ? direction switch
             {
@@ -93,8 +95,11 @@ public sealed class CarryVisualizerSystem : EntitySystem
                 _ => new Vector2(0.02f, -0.08f),
             };
 
+        offset = ApplyCarrierScaleToOffset(offset, carrierSprite.Scale);
+
         var behindCarrier = direction is Direction.North or Direction.East ||
-            direction == Direction.South && isHumanoid;
+                            direction == Direction.South && isHumanoid;
+
         var drawDepth = behindCarrier
             ? carrierSprite.DrawDepth - 1
             : carrierSprite.DrawDepth + 1;
@@ -122,9 +127,14 @@ public sealed class CarryVisualizerSystem : EntitySystem
         }
 
         SetHeadOnly(ent.Owner, ent.Comp2, state, isHumanoid && direction == Direction.South);
-
         _sprite.SetOffset((ent.Owner, ent.Comp2), state.Offset + offset);
         _sprite.SetDrawDepth((ent.Owner, ent.Comp2), drawDepth);
+    }
+
+    private static Vector2 ApplyCarrierScaleToOffset(Vector2 offset, Vector2 carrierScale)
+    {
+        var normalizedScale = new Vector2(MathF.Abs(carrierScale.X), MathF.Abs(carrierScale.Y));
+        return offset * normalizedScale;
     }
 
     private void ResetVisual(EntityUid uid)
@@ -136,9 +146,11 @@ public sealed class CarryVisualizerSystem : EntitySystem
             return;
 
         RestoreLayerVisibility(uid, sprite, state);
+
         _sprite.SetOffset((uid, sprite), state.Offset);
         _sprite.SetDrawDepth((uid, sprite), state.DrawDepth);
         _sprite.SetRotation((uid, sprite), GetCurrentRotation(uid, state.Rotation));
+
         sprite.EnableDirectionOverride = state.EnableDirectionOverride;
         sprite.DirectionOverride = state.DirectionOverride;
     }
