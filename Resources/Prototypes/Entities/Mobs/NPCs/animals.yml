@@ -364,6 +364,8 @@
   id: MobCockroach
   description: This station is just crawling with bugs.
   components:
+  - type: CarrySize
+    size: Small
   - type: Sprite
     drawdepth: SmallMobs
     sprite: Mobs/Animals/cockroach.rsi
@@ -1799,6 +1801,8 @@
   id: MobMouse
   description: Squeak!
   components:
+  - type: CarrySize
+    size: Small
   - type: Body
     prototype: Mouse
   - type: GhostRole
@@ -2234,6 +2238,8 @@
   id: MobFrog
   description: Hop hop hop. Lookin' moist.
   components:
+  - type: CarrySize
+    size: Small
   - type: MovementSpeedModifier
     baseWalkSpeed: 3
     baseSprintSpeed: 6
@@ -2395,6 +2401,8 @@
   id: MobPenguin
   description: Their lives are constant pain due to their inner-body knees.
   components:
+  - type: CarrySize
+    size: Small
   - type: Sprite
     drawdepth: Mobs
     layers:
@@ -3197,6 +3205,8 @@
   id: MobCat
   description: Feline pet, very funny.
   components:
+  - type: CarrySize
+    size: Small
   - type: Sprite
     drawdepth: Mobs
     sprite: Mobs/Pets/cat.rsi
@@ -3504,6 +3514,8 @@
   id: MobFerret
   description: Just a silly little guy!
   components:
+  - type: CarrySize
+    size: Small
   - type: Sprite
     drawdepth: Mobs
     sprite: Mobs/Pets/ferret.rsi
@@ -3558,6 +3570,8 @@
   id: MobHamster
   description: A cute, fluffy, robust hamster.
   components:
+  - type: CarrySize
+    size: Small
   - type: GhostRole
     makeSentient: true
     allowSpeech: true

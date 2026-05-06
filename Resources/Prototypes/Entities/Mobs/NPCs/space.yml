@@ -493,6 +493,8 @@
   name: snail
   description: Revolting unless you're french.
   components:
+  - type: CarrySize
+    size: Small
   - type: Body
     prototype: Mouse
   - type: GhostRole

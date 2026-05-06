@@ -19,6 +19,10 @@
         Asphyxiation: -1.0
   - type: ScaleVisuals
     scale: 1, 0.8
+  - type: CarrySize
+    size: Small
+  - type: CarryStrength
+    strength: SmallOnly
   - type: Body
     prototype: Dwarf
     requiredLegs: 2

@@ -4,6 +4,8 @@
   parent: [ SimpleMobBase, MobCombat ]
   description: He's da rat. He make da roolz.
   components:
+  - type: CarrySize
+    size: Small
   - type: CombatMode
   - type: MovementSpeedModifier
     baseWalkSpeed : 3.00
@@ -185,6 +187,8 @@
   description: He's da mini rat. He don't make da roolz.
   categories: [ HideSpawnMenu ] #Must be configured to a King or the AI breaks.
   components:
+  - type: CarrySize
+    size: Small
   - type: CombatMode
   - type: MovementSpeedModifier
     baseWalkSpeed : 3.5

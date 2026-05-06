@@ -26,6 +26,8 @@
     - Adrenaline
   - type: Buckle
   - type: StandingState
+  - type: CarrySize
+    size: Large
   - type: Tag
     tags:
     - DoorBumpOpener
