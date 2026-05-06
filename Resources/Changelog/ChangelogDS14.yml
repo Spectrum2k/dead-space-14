@@ -490,3 +490,10 @@ Entries:
   changes:
   - type: Add
     message: Тенеморф.
+- id: 53
+  author: ZekA1L
+  time: '2026-05-06T14:48:54.570683+00:00'
+  pr: 1320
+  changes:
+  - type: Fix
+    message: Удалена ненужная ошибочная проверка несуществующего прототипа из кода.
