@@ -1,13 +1,14 @@
-// Dead Space 14, licensed under custom terms with restrictions on public hosting and commercial use.
-// See LICENSE.TXT in the repository root for details.
+// Мёртвый Космос, Licensed under custom terms with restrictions on public hosting and commercial use, full text: https://raw.githubusercontent.com/dead-space-server/space-station-14-fobos/master/LICENSE.TXT
 
 using System.Numerics;
 using Content.Server.Popups;
 using Content.Server.Stunnable;
 using Content.Shared.ActionBlocker;
+using Content.Shared.Administration.Logs;
 using Content.Shared.Buckle.Components;
 using Content.Shared.Database;
 using Content.Shared.DeadSpace.Carrying;
+using Content.Shared.DoAfter;
 using Content.Shared.Hands;
 using Content.Shared.Hands.Components;
 using Content.Shared.Hands.EntitySystems;
@@ -29,17 +30,21 @@ using Robust.Shared.Map;
 using Robust.Shared.Physics;
 using Robust.Shared.Physics.Components;
 using Robust.Shared.Physics.Systems;
-using Content.Shared.Administration.Logs;
 
 namespace Content.Server.DeadSpace.Carrying;
 
 public sealed class CarrySystem : EntitySystem
 {
     private const int RequiredHands = 2;
+    private const float CarriedThrowMaxDistance = 3.5f;
     private static readonly TimeSpan HumanoidThrowKnockdownTime = TimeSpan.FromSeconds(1);
+    private static readonly TimeSpan HeavyBodyPickupTime = TimeSpan.FromSeconds(4);
+    private static readonly TimeSpan LightBodyPickupTime = TimeSpan.FromSeconds(2);
+    private static readonly TimeSpan AnimalPickupTime = TimeSpan.FromSeconds(1);
 
     [Dependency] private readonly ActionBlockerSystem _actionBlocker = default!;
     [Dependency] private readonly ISharedAdminLogManager _adminLogger = default!;
+    [Dependency] private readonly SharedDoAfterSystem _doAfter = default!;
     [Dependency] private readonly PopupSystem _popup = default!;
     [Dependency] private readonly PullingSystem _pulling = default!;
     [Dependency] private readonly SharedContainerSystem _container = default!;
@@ -51,20 +56,20 @@ public sealed class CarrySystem : EntitySystem
     [Dependency] private readonly SharedTransformSystem _transform = default!;
     [Dependency] private readonly SharedVirtualItemSystem _virtual = default!;
     [Dependency] private readonly StunSystem _stun = default!;
+    [Dependency] private readonly ThrowingSystem _throwing = default!;
 
     public override void Initialize()
     {
         base.Initialize();
 
         SubscribeLocalEvent<CarrySizeComponent, GetVerbsEvent<AlternativeVerb>>(OnGetCarryVerb);
-
+        SubscribeLocalEvent<CarrySizeComponent, CarryDoAfterEvent>(OnCarryDoAfter);
         SubscribeLocalEvent<CarryingComponent, BeforeThrowEvent>(OnBeforeThrow);
         SubscribeLocalEvent<CarryingComponent, VirtualItemDeletedEvent>(OnVirtualItemDeleted);
         SubscribeLocalEvent<CarryingComponent, EntGotInsertedIntoContainerMessage>(OnCarrierInsertedIntoContainer);
         SubscribeLocalEvent<CarryingComponent, DownedEvent>(OnCarrierDowned);
         SubscribeLocalEvent<CarryingComponent, MobStateChangedEvent>(OnCarrierMobStateChanged);
         SubscribeLocalEvent<CarryingComponent, ComponentShutdown>(OnCarryingShutdown);
-
         SubscribeLocalEvent<CarriedComponent, EntGotInsertedIntoContainerMessage>(OnCarriedInsertedIntoContainer);
         SubscribeLocalEvent<CarriedComponent, BuckledEvent>(OnCarriedBuckled);
         SubscribeLocalEvent<CarriedComponent, StandAttemptEvent>(OnCarriedStandAttempt);
@@ -81,7 +86,6 @@ public sealed class CarrySystem : EntitySystem
 
         var user = args.User;
         var target = ent.Owner;
-
         args.Verbs.Add(new AlternativeVerb
         {
             Text = Loc.GetString("carry-verb-pick-up"),
@@ -92,31 +96,49 @@ public sealed class CarrySystem : EntitySystem
         });
     }
 
+    private void OnCarryDoAfter(Entity<CarrySizeComponent> ent, ref CarryDoAfterEvent args)
+    {
+        if (args.Cancelled)
+            return;
+
+        TryCarryNow(args.User, ent.Owner);
+    }
+
     public bool TryStartCarry(EntityUid carrier, EntityUid target, bool popup = true)
     {
-        if (!CanCarry(carrier, target, out var failure))
+        if (!CanCarryWithPullingFixup(carrier, target, popup))
+            return false;
+
+        var delay = GetPickupDelay(target);
+        var doAfter = new DoAfterArgs(EntityManager, carrier, delay, new CarryDoAfterEvent(), target, target: target)
         {
-            if (failure == "carry-popup-no-free-hands")
-            {
-                StopPullingConflicts(carrier, target);
-                if (!CanCarry(carrier, target, out failure))
-                {
-                    if (popup && failure != null)
-                        _popup.PopupEntity(Loc.GetString(failure), carrier, carrier);
+            BlockDuplicate = true,
+            BreakOnDamage = true,
+            BreakOnMove = true,
+            DistanceThreshold = 1.5f,
+        };
 
-                    return false;
-                }
-            }
-            else
-            {
-                if (popup && failure != null)
-                    _popup.PopupEntity(Loc.GetString(failure), carrier, carrier);
+        return _doAfter.TryStartDoAfter(doAfter);
+    }
 
-                return false;
-            }
-        }
+    public bool CanCarry(EntityUid carrier, EntityUid target)
+    {
+        return CanCarry(carrier, target, out _);
+    }
 
-        StopPullingConflicts(carrier, target);
+    public bool TryStopCarry(EntityUid carrier)
+    {
+        if (!TryComp<CarryingComponent>(carrier, out var carrying))
+            return false;
+
+        StopCarry(carrier, carrying);
+        return true;
+    }
+
+    private bool TryCarryNow(EntityUid carrier, EntityUid target, bool popup = true)
+    {
+        if (!CanCarryWithPullingFixup(carrier, target, popup))
+            return false;
 
         if (!_hands.TryGetEmptyHand(carrier, out var firstHand) ||
             !_virtual.TrySpawnVirtualItemInHand(target, carrier, out var firstVirtual, empty: firstHand))
@@ -170,25 +192,48 @@ public sealed class CarrySystem : EntitySystem
         var targetXform = Transform(target);
         _transform.SetCoordinates(target, targetXform, new EntityCoordinates(carrier, Vector2.Zero), rotation: Angle.Zero);
         _interaction.DoContactInteraction(target, carrier);
-
-        _adminLogger.Add(LogType.Action, LogImpact.Medium,
-            $"{ToPrettyString(carrier):user} started carrying {ToPrettyString(target):target}");
+        _adminLogger.Add(LogType.Action, LogImpact.Medium, $"{ToPrettyString(carrier):user} started carrying {ToPrettyString(target):target}");
 
         return true;
     }
 
-    public bool CanCarry(EntityUid carrier, EntityUid target)
+    private bool CanCarryWithPullingFixup(EntityUid carrier, EntityUid target, bool popup)
     {
-        return CanCarry(carrier, target, out _);
+        if (!CanCarry(carrier, target, out var failure))
+        {
+            if (failure == "carry-popup-no-free-hands")
+            {
+                StopPullingConflicts(carrier, target);
+
+                if (!CanCarry(carrier, target, out failure))
+                {
+                    if (popup && failure != null)
+                        _popup.PopupEntity(Loc.GetString(failure), carrier, carrier);
+
+                    return false;
+                }
+            }
+            else
+            {
+                if (popup && failure != null)
+                    _popup.PopupEntity(Loc.GetString(failure), carrier, carrier);
+
+                return false;
+            }
+        }
+
+        StopPullingConflicts(carrier, target);
+        return true;
     }
 
-    public bool TryStopCarry(EntityUid carrier)
+    private TimeSpan GetPickupDelay(EntityUid target)
     {
-        if (!TryComp<CarryingComponent>(carrier, out var carrying))
-            return false;
+        if (HasComp<MobStateComponent>(target) && !HasComp<HumanoidAppearanceComponent>(target))
+            return AnimalPickupTime;
 
-        StopCarry(carrier, carrying);
-        return true;
+        return TryComp<CarrySizeComponent>(target, out var size) && size.Size == CarrySize.Small
+            ? LightBodyPickupTime
+            : HeavyBodyPickupTime;
     }
 
     private bool CanCarry(EntityUid carrier, EntityUid target, out string? failure)
@@ -243,8 +288,7 @@ public sealed class CarrySystem : EntitySystem
             return false;
         }
 
-        if (!_container.IsInSameOrNoContainer(carrier, target) ||
-            _container.IsEntityInContainer(target))
+        if (!_container.IsInSameOrNoContainer(carrier, target) || _container.IsEntityInContainer(target))
         {
             failure = "carry-popup-invalid-target";
             return false;
@@ -257,16 +301,13 @@ public sealed class CarrySystem : EntitySystem
         }
 
         var xform = Transform(target);
-        if (xform.Anchored ||
-            !TryComp<PhysicsComponent>(target, out var physics) ||
-            physics.BodyType == BodyType.Static)
+        if (xform.Anchored || !TryComp<PhysicsComponent>(target, out var physics) || physics.BodyType == BodyType.Static)
         {
             failure = "carry-popup-invalid-target";
             return false;
         }
 
-        if (!TryComp<HandsComponent>(carrier, out var hands) ||
-            _hands.GetEmptyHandCount((carrier, hands)) < RequiredHands)
+        if (!TryComp<HandsComponent>(carrier, out var hands) || _hands.GetEmptyHandCount((carrier, hands)) < RequiredHands)
         {
             failure = "carry-popup-no-free-hands";
             return false;
@@ -280,29 +321,40 @@ public sealed class CarrySystem : EntitySystem
         if (ent.Comp.Carried is not { } target)
             return;
 
-        if (!TryComp<VirtualItemComponent>(args.ItemUid, out var virtualItem) ||
-            virtualItem.BlockingEntity != target)
-        {
+        if (!TryComp<VirtualItemComponent>(args.ItemUid, out var virtualItem) || virtualItem.BlockingEntity != target)
             return;
-        }
 
-        args.ItemUid = target;
+        args.Cancelled = true;
+
+        var direction = args.Direction;
+        if (direction.LengthSquared() > CarriedThrowMaxDistance * CarriedThrowMaxDistance)
+            direction = Vector2.Normalize(direction) * CarriedThrowMaxDistance;
 
         if (HasComp<HumanoidAppearanceComponent>(target))
             _stun.TryUpdateParalyzeDuration(target, HumanoidThrowKnockdownTime);
 
         StopCarry(ent.Owner, ent.Comp, thrown: true);
+
+        if (direction.LengthSquared() <= 0.001f)
+            return;
+
+        _throwing.TryThrow(
+            target,
+            direction,
+            args.ThrowSpeed,
+            ent.Owner,
+            pushbackRatio: 0f,
+            compensateFriction: true,
+            recoil: false,
+            doSpin: false);
     }
 
     private void OnVirtualItemDeleted(Entity<CarryingComponent> ent, ref VirtualItemDeletedEvent args)
     {
-        if (ent.Comp.Stopping ||
-            ent.Comp.Carried != args.BlockingEntity)
-        {
+        if (ent.Comp.Stopping || ent.Comp.Carried != args.BlockingEntity)
             return;
-        }
 
-        StopCarry(ent.Owner, ent.Comp, placeTarget: !TerminatingOrDeleted(ent.Owner));
+        StopCarry(ent.Owner, ent.Comp, placeTarget: !TerminatingOrDeleted(ent.Owner), keepTargetDown: ShouldKeepDroppedTargetDown(ent.Owner));
     }
 
     private void OnCarrierInsertedIntoContainer(Entity<CarryingComponent> ent, ref EntGotInsertedIntoContainerMessage args)
@@ -312,7 +364,7 @@ public sealed class CarrySystem : EntitySystem
 
     private void OnCarrierDowned(Entity<CarryingComponent> ent, ref DownedEvent args)
     {
-        StopCarry(ent.Owner, ent.Comp);
+        StopCarry(ent.Owner, ent.Comp, keepTargetDown: true);
     }
 
     private void OnCarrierMobStateChanged(Entity<CarryingComponent> ent, ref MobStateChangedEvent args)
@@ -320,7 +372,7 @@ public sealed class CarrySystem : EntitySystem
         if (args.NewMobState is MobState.Alive)
             return;
 
-        StopCarry(ent.Owner, ent.Comp);
+        StopCarry(ent.Owner, ent.Comp, keepTargetDown: true);
     }
 
     private void OnCarriedInsertedIntoContainer(Entity<CarriedComponent> ent, ref EntGotInsertedIntoContainerMessage args)
@@ -354,12 +406,8 @@ public sealed class CarrySystem : EntitySystem
 
     private void OnCarriedShutdown(Entity<CarriedComponent> ent, ref ComponentShutdown args)
     {
-        if (ent.Comp.Stopping ||
-            ent.Comp.Carrier is not { } carrier ||
-            !TryComp<CarryingComponent>(carrier, out var carrying))
-        {
+        if (ent.Comp.Stopping || ent.Comp.Carrier is not { } carrier || !TryComp<CarryingComponent>(carrier, out var carrying))
             return;
-        }
 
         CleanupCarry(carrier, carrying, thrown: false, placeTarget: false, removeCarriedComponent: false);
     }
@@ -368,10 +416,11 @@ public sealed class CarrySystem : EntitySystem
         EntityUid carrier,
         CarryingComponent carrying,
         bool thrown = false,
-        bool placeTarget = true)
+        bool placeTarget = true,
+        bool keepTargetDown = false)
     {
         placeTarget &= !TerminatingOrDeleted(carrier);
-        CleanupCarry(carrier, carrying, thrown, placeTarget);
+        CleanupCarry(carrier, carrying, thrown, placeTarget, keepTargetDown: keepTargetDown);
     }
 
     private void CleanupCarry(
@@ -380,7 +429,8 @@ public sealed class CarrySystem : EntitySystem
         bool thrown,
         bool placeTarget,
         bool removeCarrierComponent = true,
-        bool removeCarriedComponent = true)
+        bool removeCarriedComponent = true,
+        bool keepTargetDown = false)
     {
         if (carrying.Stopping)
             return;
@@ -389,7 +439,6 @@ public sealed class CarrySystem : EntitySystem
 
         var target = carrying.Carried;
         CarriedComponent? carried = null;
-
         if (target != null)
             TryComp(target.Value, out carried);
 
@@ -398,7 +447,7 @@ public sealed class CarrySystem : EntitySystem
 
         if (target is { } targetUid && !Deleted(targetUid))
         {
-            RestoreCarried(targetUid, carried, carrier, placeTarget, thrown);
+            RestoreCarried(targetUid, carried, carrier, placeTarget, thrown, keepTargetDown);
 
             if (removeCarriedComponent && HasComp<CarriedComponent>(targetUid))
                 RemComp<CarriedComponent>(targetUid);
@@ -414,10 +463,7 @@ public sealed class CarrySystem : EntitySystem
             RemComp<CarryingComponent>(carrier);
 
         if (target is { } logTarget)
-        {
-            _adminLogger.Add(LogType.Action, LogImpact.Medium,
-                $"{ToPrettyString(carrier):user} stopped carrying {ToPrettyString(logTarget):target}");
-        }
+            _adminLogger.Add(LogType.Action, LogImpact.Medium, $"{ToPrettyString(carrier):user} stopped carrying {ToPrettyString(logTarget):target}");
     }
 
     private void RestoreCarried(
@@ -425,7 +471,8 @@ public sealed class CarrySystem : EntitySystem
         CarriedComponent? carried,
         EntityUid carrier,
         bool placeTarget,
-        bool thrown)
+        bool thrown,
+        bool keepTargetDown)
     {
         if (carried?.AddedBlockMovement == true && HasComp<BlockMovementComponent>(target))
             RemComp<BlockMovementComponent>(target);
@@ -438,7 +485,7 @@ public sealed class CarrySystem : EntitySystem
             _physics.ResetDynamics(target, physics);
         }
 
-        RestoreForcedDown(target, carried, thrown);
+        RestoreForcedDown(target, carried, thrown, keepTargetDown);
 
         if (!placeTarget || TerminatingOrDeleted(carrier) || TerminatingOrDeleted(target))
             return;
@@ -470,9 +517,10 @@ public sealed class CarrySystem : EntitySystem
             carried.ForcedDown = true;
     }
 
-    private void RestoreForcedDown(EntityUid target, CarriedComponent? carried, bool thrown)
+    private void RestoreForcedDown(EntityUid target, CarriedComponent? carried, bool thrown, bool keepTargetDown)
     {
         if (thrown ||
+            keepTargetDown ||
             carried?.ForcedDown != true ||
             !carried.WasStanding ||
             TerminatingOrDeleted(target) ||
@@ -484,6 +532,15 @@ public sealed class CarrySystem : EntitySystem
         }
 
         _standing.Stand(target, force: true);
+    }
+
+
+    private bool ShouldKeepDroppedTargetDown(EntityUid carrier)
+    {
+        if (TryComp<StandingStateComponent>(carrier, out var standing) && !standing.Standing)
+            return true;
+
+        return TryComp<MobStateComponent>(carrier, out var mobState) && _mobState.IsIncapacitated(carrier, mobState);
     }
 
     private void StopPullingConflicts(EntityUid carrier, EntityUid target)

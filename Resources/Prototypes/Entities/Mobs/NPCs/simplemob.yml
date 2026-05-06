@@ -26,8 +26,10 @@
     - Adrenaline
   - type: Buckle
   - type: StandingState
+  # DS14-start
   - type: CarrySize
     size: Large
+  # DS14-end
   - type: Tag
     tags:
     - DoorBumpOpener

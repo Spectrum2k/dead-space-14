@@ -1,5 +1,4 @@
-// Dead Space 14, licensed under custom terms with restrictions on public hosting and commercial use.
-// See LICENSE.TXT in the repository root for details.
+// Мёртвый Космос, Licensed under custom terms with restrictions on public hosting and commercial use, full text: https://raw.githubusercontent.com/dead-space-server/space-station-14-fobos/master/LICENSE.TXT
 
 using System.Linq;
 using System.Numerics;
@@ -75,18 +74,27 @@ public sealed class CarryVisualizerSystem : EntitySystem
         var angle = _transform.GetWorldRotation(carrier) + _eye.CurrentEye.Rotation;
         var direction = angle.GetCardinalDir();
 
-        var offset = direction switch
-        {
-            Direction.North => new Vector2(-0.02f, 0.02f),
-            Direction.South => new Vector2(-0.10f, -0.08f),
-            Direction.East => new Vector2(0.04f, -0.10f),
-            Direction.West => new Vector2(-0.04f, -0.10f),
-            _ => new Vector2(-0.08f, -0.08f),
-        };
-
         var isHumanoid = HasComp<HumanoidAppearanceComponent>(ent.Owner);
+        var offset = isHumanoid
+            ? direction switch
+            {
+                Direction.North => new Vector2(-0.02f, 0.02f),
+                Direction.South => new Vector2(-0.10f, -0.08f),
+                Direction.East => new Vector2(0.04f, -0.10f),
+                Direction.West => new Vector2(-0.04f, -0.10f),
+                _ => new Vector2(-0.08f, -0.08f),
+            }
+            : direction switch
+            {
+                Direction.North => new Vector2(0.02f, 0.02f),
+                Direction.South => new Vector2(0.02f, -0.08f),
+                Direction.East => new Vector2(0.08f, -0.10f),
+                Direction.West => new Vector2(0.00f, -0.10f),
+                _ => new Vector2(0.02f, -0.08f),
+            };
+
         var behindCarrier = direction is Direction.North or Direction.East ||
-                            direction == Direction.South && isHumanoid;
+            direction == Direction.South && isHumanoid;
         var drawDepth = behindCarrier
             ? carrierSprite.DrawDepth - 1
             : carrierSprite.DrawDepth + 1;
@@ -95,16 +103,15 @@ public sealed class CarryVisualizerSystem : EntitySystem
         {
             var rotation = direction switch
             {
+                Direction.North => Angle.FromDegrees(90),
                 Direction.East => Angle.FromDegrees(90),
                 Direction.West => Angle.FromDegrees(-90),
                 Direction.South => Angle.Zero,
-                Direction.North => Angle.Zero,
                 _ => Angle.Zero,
             };
 
             var directionOverride = direction switch
             {
-                Direction.North => Direction.North,
                 Direction.South => Direction.South,
                 _ => Direction.South,
             };

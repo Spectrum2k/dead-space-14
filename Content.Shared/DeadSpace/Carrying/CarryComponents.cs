@@ -1,7 +1,8 @@
-// Dead Space 14, licensed under custom terms with restrictions on public hosting and commercial use.
-// See LICENSE.TXT in the repository root for details.
+// Мёртвый Космос, Licensed under custom terms with restrictions on public hosting and commercial use, full text: https://raw.githubusercontent.com/dead-space-server/space-station-14-fobos/master/LICENSE.TXT
 
+using Content.Shared.DoAfter;
 using Robust.Shared.GameStates;
+using Robust.Shared.Serialization;
 
 namespace Content.Shared.DeadSpace.Carrying;
 
@@ -63,4 +64,9 @@ public sealed partial class CarriedComponent : Component
 
     [ViewVariables]
     public bool WasStanding;
+}
+
+[Serializable, NetSerializable]
+public sealed partial class CarryDoAfterEvent : SimpleDoAfterEvent
+{
 }
