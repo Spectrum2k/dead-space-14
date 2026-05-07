@@ -1,7 +1,6 @@
 // Мёртвый Космос, Licensed under custom terms with restrictions on public hosting and commercial use, full text: https://raw.githubusercontent.com/dead-space-server/space-station-14-fobos/master/LICENSE.TXT
 
 using System;
-using System.Linq;
 using System.Numerics;
 using Content.Shared.DeadSpace.Carrying;
 using Content.Shared.Humanoid;
@@ -81,7 +80,7 @@ public sealed class CarryVisualizerSystem : EntitySystem
             ? direction switch
             {
                 Direction.North => new Vector2(-0.02f, 0.02f),
-                Direction.South => new Vector2(-0.10f, -0.08f),
+                Direction.South => new Vector2(-0.04f, -0.10f),
                 Direction.East => new Vector2(0.04f, -0.10f),
                 Direction.West => new Vector2(-0.04f, -0.10f),
                 _ => new Vector2(-0.08f, -0.08f),
@@ -89,7 +88,7 @@ public sealed class CarryVisualizerSystem : EntitySystem
             : direction switch
             {
                 Direction.North => new Vector2(0.02f, 0.02f),
-                Direction.South => new Vector2(0.02f, -0.08f),
+                Direction.South => new Vector2(0.00f, 0.14f),
                 Direction.East => new Vector2(0.08f, -0.10f),
                 Direction.West => new Vector2(0.00f, -0.10f),
                 _ => new Vector2(0.02f, -0.08f),
@@ -97,8 +96,7 @@ public sealed class CarryVisualizerSystem : EntitySystem
 
         offset = ApplyCarrierScaleToOffset(offset, carrierSprite.Scale);
 
-        var behindCarrier = direction is Direction.North or Direction.East ||
-                            direction == Direction.South && isHumanoid;
+        var behindCarrier = direction is Direction.North or Direction.East;
 
         var drawDepth = behindCarrier
             ? carrierSprite.DrawDepth - 1
@@ -111,7 +109,7 @@ public sealed class CarryVisualizerSystem : EntitySystem
                 Direction.North => Angle.FromDegrees(90),
                 Direction.East => Angle.FromDegrees(90),
                 Direction.West => Angle.FromDegrees(-90),
-                Direction.South => Angle.Zero,
+                Direction.South => Angle.FromDegrees(-90),
                 _ => Angle.Zero,
             };
 
@@ -126,7 +124,6 @@ public sealed class CarryVisualizerSystem : EntitySystem
             _sprite.SetRotation((ent.Owner, ent.Comp2), rotation);
         }
 
-        SetHeadOnly(ent.Owner, ent.Comp2, state, isHumanoid && direction == Direction.South);
         _sprite.SetOffset((ent.Owner, ent.Comp2), state.Offset + offset);
         _sprite.SetDrawDepth((ent.Owner, ent.Comp2), drawDepth);
     }
@@ -145,70 +142,12 @@ public sealed class CarryVisualizerSystem : EntitySystem
         if (!TryComp<SpriteComponent>(uid, out var sprite))
             return;
 
-        RestoreLayerVisibility(uid, sprite, state);
-
         _sprite.SetOffset((uid, sprite), state.Offset);
         _sprite.SetDrawDepth((uid, sprite), state.DrawDepth);
         _sprite.SetRotation((uid, sprite), GetCurrentRotation(uid, state.Rotation));
 
         sprite.EnableDirectionOverride = state.EnableDirectionOverride;
         sprite.DirectionOverride = state.DirectionOverride;
-    }
-
-    private void SetHeadOnly(EntityUid uid, SpriteComponent sprite, CarryVisualState state, bool enabled)
-    {
-        if (!enabled)
-        {
-            RestoreLayerVisibility(uid, sprite, state);
-            return;
-        }
-
-        state.LayerVisibility ??= CaptureLayerVisibility(sprite);
-
-        var visibleHeadLayers = new HashSet<int>();
-        foreach (var layer in HumanoidVisualLayersExtension.Sublayers(HumanoidVisualLayers.Head))
-        {
-            if (_sprite.LayerMapTryGet((uid, sprite), layer, out var index, false))
-                visibleHeadLayers.Add(index);
-        }
-
-        if (visibleHeadLayers.Count == 0)
-        {
-            RestoreLayerVisibility(uid, sprite, state);
-            return;
-        }
-
-        for (var i = 0; i < sprite.AllLayers.Count(); i++)
-        {
-            _sprite.LayerSetVisible((uid, sprite), i, visibleHeadLayers.Contains(i) && state.LayerVisibility.GetValueOrDefault(i));
-        }
-    }
-
-    private void RestoreLayerVisibility(EntityUid uid, SpriteComponent sprite, CarryVisualState state)
-    {
-        if (state.LayerVisibility == null)
-            return;
-
-        foreach (var (index, visible) in state.LayerVisibility)
-        {
-            if (index >= sprite.AllLayers.Count())
-                continue;
-
-            _sprite.LayerSetVisible((uid, sprite), index, visible);
-        }
-
-        state.LayerVisibility = null;
-    }
-
-    private static Dictionary<int, bool> CaptureLayerVisibility(SpriteComponent sprite)
-    {
-        var visibility = new Dictionary<int, bool>();
-        for (var i = 0; i < sprite.AllLayers.Count(); i++)
-        {
-            visibility[i] = sprite[i].Visible;
-        }
-
-        return visibility;
     }
 
     private Angle GetCurrentRotation(EntityUid uid, Angle fallback)
@@ -239,6 +178,5 @@ public sealed class CarryVisualizerSystem : EntitySystem
         public readonly Angle Rotation = rotation;
         public readonly bool EnableDirectionOverride = enableDirectionOverride;
         public readonly Direction DirectionOverride = directionOverride;
-        public Dictionary<int, bool>? LayerVisibility;
     }
 }

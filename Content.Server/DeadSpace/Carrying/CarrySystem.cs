@@ -252,6 +252,18 @@ public sealed class CarrySystem : EntitySystem
             return false;
         }
 
+        if (HasComp<CannotBeCarriedComponent>(target))
+        {
+            failure = "carry-popup-not-carryable";
+            return false;
+        }
+
+        if (TryComp<StandingStateComponent>(carrier, out var carrierStanding) && !carrierStanding.Standing)
+        {
+            failure = "carry-popup-not-standing";
+            return false;
+        }
+
         if (HasComp<CarryingComponent>(carrier) || HasComp<CarriedComponent>(carrier))
         {
             failure = "carry-popup-busy";

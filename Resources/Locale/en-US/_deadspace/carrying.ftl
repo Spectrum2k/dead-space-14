@@ -10,3 +10,4 @@ carry-popup-too-large = They are too large for you to carry.
 carry-popup-cannot-interact = You cannot reach that.
 carry-popup-target-buckled = They are buckled in.
 carry-popup-no-free-hands = You need both hands free.
+carry-popup-not-standing = You cannot pick creatures up while lying down.

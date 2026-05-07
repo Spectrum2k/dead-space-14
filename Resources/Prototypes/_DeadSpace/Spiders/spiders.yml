@@ -7,6 +7,7 @@
   id: BaseMobSpiderTerror
   description: Маленький ядовитый паучок.
   components:
+  - type: CannotBeCarried
   - type: StaminaResistance
     damageCoefficient: 0.2
   - type: ImmunEgg

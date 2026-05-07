@@ -131,6 +131,7 @@
   parent:
   - BaseMob
   components:
+  - type: CannotBeCarried
   - type: Speech
     speechSounds: Cat
     speechVerb: SmallMob
@@ -199,6 +200,7 @@
   parent: [ BaseMob, MobDamageable, MobCombat ]
   description: Alien crater, feline invader!
   components:
+  - type: CannotBeCarried
   - type: ReplacementAccent
     accent: cat
   - type: GhostTakeoverAvailable

@@ -24,6 +24,8 @@
   id: MobSmallNecro
   description: Маленький.
   components:
+  - type: CarrySize
+    size: Small
   - type: Damageable
     damageModifierSet: Necromorf
   - type: Necromorf
