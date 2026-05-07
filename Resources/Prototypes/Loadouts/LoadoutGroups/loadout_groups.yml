@@ -1464,6 +1464,7 @@
   minLimit: 0
   loadouts:
   - SecurityBandana
+  - SecurityGaiter
 
 - type: loadoutGroup
   id: SecurityJumpsuit
@@ -1510,7 +1511,7 @@
   - JackSecBoots
   - CombatBoots
   - JackBoots
-  # - SecurityWinterBoots
+  - SecurityWinterBoots
 
 # DS14-disabled
 #- type: loadoutGroup
