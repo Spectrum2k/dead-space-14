@@ -569,3 +569,12 @@ Entries:
   changes:
   - type: Add
     message: 2 новых логотипа корпорации Nanotrasen.
+- id: 61
+  author: Non-stop-smetana
+  time: '2026-05-07T18:52:03.093446+00:00'
+  pr: 1328
+  changes:
+  - type: Add
+    message: Добавлен новый револьвер для офицеров СБ - Вердикт.
+  - type: Tweak
+    message: Хранилище патрон у Декарда изменено, 5 -> 6
