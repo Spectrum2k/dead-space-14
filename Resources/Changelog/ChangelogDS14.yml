@@ -585,3 +585,10 @@ Entries:
   changes:
   - type: Fix
     message: Исправленные ошибки на карте ЦК
+- id: 63
+  author: CyberBobeks
+  time: '2026-05-07T21:48:41.563798+00:00'
+  pr: 1330
+  changes:
+  - type: Add
+    message: Возможность побега, если тебя несут на руках.
