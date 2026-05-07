@@ -67,6 +67,7 @@ public sealed class CarrySystem : EntitySystem
         SubscribeLocalEvent<CarryingComponent, BeforeThrowEvent>(OnBeforeThrow);
         SubscribeLocalEvent<CarryingComponent, VirtualItemDeletedEvent>(OnVirtualItemDeleted);
         SubscribeLocalEvent<CarryingComponent, EntGotInsertedIntoContainerMessage>(OnCarrierInsertedIntoContainer);
+        SubscribeLocalEvent<CarryingComponent, BuckledEvent>(OnCarrierBuckled);
         SubscribeLocalEvent<CarryingComponent, DownedEvent>(OnCarrierDowned);
         SubscribeLocalEvent<CarryingComponent, MobStateChangedEvent>(OnCarrierMobStateChanged);
         SubscribeLocalEvent<CarryingComponent, ComponentShutdown>(OnCarryingShutdown);
@@ -252,12 +253,6 @@ public sealed class CarrySystem : EntitySystem
             return false;
         }
 
-        if (HasComp<CannotBeCarriedComponent>(target))
-        {
-            failure = "carry-popup-not-carryable";
-            return false;
-        }
-
         if (TryComp<StandingStateComponent>(carrier, out var carrierStanding) && !carrierStanding.Standing)
         {
             failure = "carry-popup-not-standing";
@@ -330,6 +325,9 @@ public sealed class CarrySystem : EntitySystem
 
     private void OnBeforeThrow(Entity<CarryingComponent> ent, ref BeforeThrowEvent args)
     {
+        if (args.Cancelled)
+            return;
+
         if (ent.Comp.Carried is not { } target)
             return;
 
@@ -372,6 +370,11 @@ public sealed class CarrySystem : EntitySystem
     private void OnCarrierInsertedIntoContainer(Entity<CarryingComponent> ent, ref EntGotInsertedIntoContainerMessage args)
     {
         StopCarry(ent.Owner, ent.Comp);
+    }
+
+    private void OnCarrierBuckled(Entity<CarryingComponent> ent, ref BuckledEvent args)
+    {
+        StopCarry(ent.Owner, ent.Comp, keepTargetDown: ShouldKeepDroppedTargetDown(ent.Owner));
     }
 
     private void OnCarrierDowned(Entity<CarryingComponent> ent, ref DownedEvent args)

@@ -32,9 +32,6 @@ public sealed partial class CarryStrengthComponent : Component
     public CarryStrength Strength = CarryStrength.Any;
 }
 
-[RegisterComponent]
-public sealed partial class CannotBeCarriedComponent : Component;
-
 [RegisterComponent, NetworkedComponent, AutoGenerateComponentState(raiseAfterAutoHandleState: true)]
 public sealed partial class CarryingComponent : Component
 {
