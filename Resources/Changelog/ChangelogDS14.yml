@@ -785,3 +785,14 @@ Entries:
   changes:
   - type: Add
     message: Добавлены новые стены для будущих карт (by pyfya and kerfroozy)
+- id: 82
+  author: CyberBobeks
+  time: '2026-05-09T23:03:12.637423+00:00'
+  pr: 1356
+  changes:
+  - type: Add
+    message: Отображение очагов возгорания в консоль атмосферной сигнализации.
+  - type: Add
+    message: Отображение поломанных проводов в консоль контроля питания.
+  - type: Fix
+    message: Некорректное тушение огня и его реакцию на воду.
