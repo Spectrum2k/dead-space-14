@@ -836,3 +836,10 @@ Entries:
     message: Маг больше не может стрелять из оружия.
   - type: Tweak
     message: Cooldown способности стержня мага увеличен с 1 минуты до 3 минут.
+- id: 87
+  author: Spectrum2k
+  time: '2026-05-10T20:37:00.026578+00:00'
+  pr: 1363
+  changes:
+  - type: Add
+    message: Админ-чат теперь можно открыть в отдельном окне (pop-out).
