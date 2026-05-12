@@ -93,18 +93,18 @@ public sealed class RadioSystem : EntitySystem
 
         // DS14-Languages-end
 
+        // DS14-start
         if (TryComp(uid, out ActorComponent? actor))
-        { // DS14
-            // DS14-start chat command links
+        {
             if (ShouldSendCommandLinkSender(uid, actor.PlayerSession, args.MessageSource))
                 msg = WithCommandLinkSender(msg, args.MessageSource);
-            // DS14-end
 
-            _netMan.ServerSendMessage(msg, actor.PlayerSession.Channel); // DS14-edit
-        } // DS14
+            _netMan.ServerSendMessage(msg, actor.PlayerSession.Channel);
+        }
+        // DS14-end
     }
 
-    // DS14-start chat command links
+    // DS14-start
     private bool ShouldSendCommandLinkSender(EntityUid receiver, ICommonSession session, EntityUid source)
     {
         if (!HasComp<MobStateComponent>(source))

@@ -164,16 +164,15 @@ public sealed class HeadsetSystem : SharedHeadsetSystem
 
         if (TryComp(receiver, out ActorComponent? actor))
         {
+            // DS14-start
             if (sendMessage)
-            { // DS14
-                // DS14-start chat command links
+            {
                 if (ShouldSendCommandLinkSender(receiver, actor.PlayerSession, messageSource))
                     msg = WithCommandLinkSender(msg, messageSource);
-                // DS14-end
 
                 _netMan.ServerSendMessage(msg, actor.PlayerSession.Channel);
-            } // DS14
-
+            }
+            // DS14-end
             if (receiver != messageSource && TryComp(messageSource, out TTSComponent? _))
             {
                 args.Receivers.Add(receiver);
@@ -181,7 +180,7 @@ public sealed class HeadsetSystem : SharedHeadsetSystem
         }
     }
 
-    // DS14-start chat command links
+    // DS14-start
     private bool ShouldSendCommandLinkSender(EntityUid receiver, ICommonSession session, EntityUid source)
     {
         if (!HasComp<MobStateComponent>(source))

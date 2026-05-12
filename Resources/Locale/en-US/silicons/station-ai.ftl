@@ -75,6 +75,46 @@ station-ai-camera-search-type-items = Items
 station-ai-camera-search-result-character = crew
 station-ai-camera-search-result-item = item
 station-ai-camera-search-result = [{$type}] {$name}
+station-ai-centcomm-fax-window-title = AI-CC Facsimile Communications Line
+station-ai-centcomm-fax-channel = AI-CC / Central Command
+station-ai-centcomm-fax-route = Secure Central Command facsimile line
+station-ai-centcomm-fax-buffer-label = Address buffer
+station-ai-centcomm-fax-footer-route = [sai@nanotrasen] $ uplink --route ai-cc-fax
+station-ai-centcomm-fax-footer-code = AI-CC
+station-ai-centcomm-fax-content-placeholder = Enter an address for Central Command...
+station-ai-centcomm-fax-content-limit = Buffer: { $count }/{ $max }
+station-ai-centcomm-fax-send = Send fax
+station-ai-centcomm-fax-status-initializing = Awaiting input
+station-ai-centcomm-fax-status-ready = AI-CC line is ready for transmission.
+station-ai-centcomm-fax-status-empty = Address buffer is empty.
+station-ai-centcomm-fax-status-cooldown = AI-CC line is resynchronizing: { $seconds }s.
+station-ai-centcomm-fax-status-unavailable = AI-CC transmission was not confirmed by the Central Command facsimile node.
+station-ai-centcomm-fax-status-sent = Address accepted by the Central Command facsimile node.
+station-ai-centcomm-fax-notice-deactivation = [color=#d6a54b]Use of this channel without substantial cause will result in immediate AI core deactivation.[/color]
+station-ai-centcomm-fax-notice-no-response = [color=#7fa7b8]Central Command does not guarantee a response to received messages.[/color]
+station-ai-centcomm-fax-station-unknown = unknown station
+station-ai-centcomm-fax-source-name = Station AI { $name }
+station-ai-centcomm-fax-stamp = AI-CC channel
+station-ai-centcomm-fax-document-name = AI-CC - station AI address
+station-ai-centcomm-fax-document =
+    -- [head=3]{ $station }[/head] --
+    -- [head=3]AI-CC[/head] --
+    ═════════════════════════════════════
+    :: [bold]Machine address from station AI[/bold]
+    ═════════════════════════════════════
+    Shift time and date: { $time } { $date }
+    Document compiler: { $sender }
+    Compiler position: Station artificial intelligence
+    ─────────────────────────────────────
+    Communications line code: AI-CC
+    Route: secure Central Command facsimile line
+    Delivery status: accepted by the Central Command facsimile node
+    ─────────────────────────────────────
+    Address text:
+    { $content }
+    ═════════════════════════════════════
+    -- [italic]Stamp area[/italic] --
+
 cmd-ai-track-entity-desc = Moves the AI eye to a target available through cameras or coordinate sensors.
 cmd-ai-track-entity-help = Usage: {$command} <netEntity>
 

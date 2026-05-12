@@ -62,6 +62,46 @@ station-ai-camera-search-type-items = Предметы
 station-ai-camera-search-result-character = сотрудник
 station-ai-camera-search-result-item = предмет
 station-ai-camera-search-result = [{ $type }] { $name }
+station-ai-centcomm-fax-window-title = Факсимиальная линия связи ИИ-ЦК
+station-ai-centcomm-fax-channel = ИИ-ЦК / Центральное Командование
+station-ai-centcomm-fax-route = Защищённая факсимильная линия Центрального Командования
+station-ai-centcomm-fax-buffer-label = Буфер обращения
+station-ai-centcomm-fax-footer-route = [sai@nanotrasen] $ uplink --route ai-cc-fax
+station-ai-centcomm-fax-footer-code = ИИ-ЦК
+station-ai-centcomm-fax-content-placeholder = Введите обращение для Центрального Командования...
+station-ai-centcomm-fax-content-limit = Буфер: { $count }/{ $max }
+station-ai-centcomm-fax-send = Отправить факс
+station-ai-centcomm-fax-status-initializing = Ожидание ввода
+station-ai-centcomm-fax-status-ready = Линия ИИ-ЦК готова к передаче.
+station-ai-centcomm-fax-status-empty = Буфер обращения пуст.
+station-ai-centcomm-fax-status-cooldown = Линия ИИ-ЦК восстанавливает синхронизацию: { $seconds } с.
+station-ai-centcomm-fax-status-unavailable = Передача ИИ-ЦК не подтверждена факсимильным узлом Центрального Командования.
+station-ai-centcomm-fax-status-sent = Обращение принято факсимильным узлом Центрального Командования.
+station-ai-centcomm-fax-notice-deactivation = [color=#d6a54b]Использование этого канала без весомого основания приведёт к немедленной деактивации ядра ИИ.[/color]
+station-ai-centcomm-fax-notice-no-response = [color=#7fa7b8]Центральное Командование не гарантирует ответ на полученные сообщения.[/color]
+station-ai-centcomm-fax-station-unknown = неизвестная станция
+station-ai-centcomm-fax-source-name = Станционный ИИ { $name }
+station-ai-centcomm-fax-stamp = Канал ИИ-ЦК
+station-ai-centcomm-fax-document-name = ИИ-ЦК — обращение станционного ИИ
+station-ai-centcomm-fax-document =
+    -- [head=3]{ $station }[/head] --
+    -- [head=3]ИИ-ЦК[/head] --
+    ═════════════════════════════════════
+    :: [bold]Машинное обращение станционного ИИ[/bold]
+    ═════════════════════════════════════
+    Время от начала смены и дата: { $time } { $date }
+    Составитель документа: { $sender }
+    Должность составителя: Станционный искусственный интеллект
+    ─────────────────────────────────────
+    Код линии связи: ИИ-ЦК
+    Маршрут: защищённая факсимильная линия Центрального Командования
+    Статус доставки: принято факсимильным узлом Центрального Командования
+    ─────────────────────────────────────
+    Текст обращения:
+    { $content }
+    ═════════════════════════════════════
+    -- [italic]Место для печатей[/italic] --
+
 cmd-ai-track-entity-desc = Перемещает око ИИ к цели, доступной камерам или координатным датчикам.
 cmd-ai-track-entity-help = Использование: { $command } <netEntity>
 # Customizations

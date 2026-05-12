@@ -120,6 +120,9 @@ public sealed class AiEyeSystem : EntitySystem
 
     private void OnMoveToCam(Entity<AiEyeComponent> ent, ref EyeMoveToCam args)
     {
+        if (args.Actor != ent.Owner)
+            return;
+
         if (!TryGetEntity(args.Uid, out var camera))
             return;
 
