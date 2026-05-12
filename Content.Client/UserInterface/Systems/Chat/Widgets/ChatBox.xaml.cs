@@ -1,3 +1,4 @@
+using Content.Client.DeadSpace.Chat;
 using Content.Client.UserInterface.Systems.Chat.Controls;
 using Content.Shared.Chat;
 using Content.Shared.Input;
@@ -68,7 +69,18 @@ public partial class ChatBox : UIWidget
 
         var color = msg.MessageColorOverride ?? msg.Channel.TextColor();
 
-        AddLine(msg.WrappedMessage, color);
+        // DS14-start
+        var allowCommandLinks = false;
+        var wrappedMessage = msg.WrappedMessage;
+        if (_entManager.SystemOrNull<ChatEntityCommandLinkSystem>() is { } commandLinks &&
+            commandLinks.TryGetPrefix(msg, out var commandLinkPrefix))
+        {
+            wrappedMessage = $"{commandLinkPrefix} {wrappedMessage}";
+            allowCommandLinks = true;
+        }
+
+        AddLine(wrappedMessage, color, allowCommandLinks);
+        // DS14-end
     }
 
     private void OnHighlightsUpdated(string highlights)
@@ -111,7 +123,7 @@ public partial class ChatBox : UIWidget
         _controller.UpdateHighlights(highlighs);
     }
 
-    public void AddLine(string message, Color color)
+    public void AddLine(string message, Color color, bool allowCommandLinks = false) // DS14
     {
         var formatted = new FormattedMessage(3);
         formatted.PushColor(color);
@@ -123,7 +135,12 @@ public partial class ChatBox : UIWidget
         }
         // DS14-end
         formatted.Pop();
-        Contents.AddMessage(formatted);
+        // DS14-start
+        if (allowCommandLinks)
+            Contents.AddMessage(formatted, ChatEntityCommandLinkSystem.TagsWithCommandLinks);
+        else
+            Contents.AddMessage(formatted);
+        // DS14-end
     }
 
     public void Focus(ChatSelectChannel? channel = null)

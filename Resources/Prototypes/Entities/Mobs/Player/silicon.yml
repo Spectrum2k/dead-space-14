@@ -39,6 +39,7 @@
     - ActionSurvCameraLights
     - ActionAIViewLaws
     - AIEyeCamAction
+    - ActionAILeaveRound # DS14
   - type: UserInterface
     interfaces:
       enum.RadarConsoleUiKey.Key:
