@@ -26,10 +26,11 @@ namespace Content.Server.DeadSpace.StationAI.Systems;
 public sealed class AiEyeSystem : EntitySystem
 {
     private const int MinSearchLength = 2;
+    private const int MinItemSearchLength = 3;
     private const int MaxSearchLength = 64;
     private const int MaxSearchResults = 40;
     private const int MaxSearchCandidates = 150;
-    private const LookupFlags SearchLookupFlags = LookupFlags.Uncontained | LookupFlags.Approximate;
+    private const int MaxItemNameMatches = 80;
     private static readonly TimeSpan SearchCooldown = TimeSpan.FromSeconds(3);
     private static readonly TimeSpan TargetJumpCooldown = TimeSpan.FromSeconds(0.75);
     private static readonly TimeSpan SensorCacheRefreshRate = TimeSpan.FromSeconds(1);
@@ -39,7 +40,6 @@ public sealed class AiEyeSystem : EntitySystem
     [Dependency] private readonly IGameTiming _timing = default!;
     [Dependency] private readonly PopupSystem _popup = default!;
     [Dependency] private readonly SharedContainerSystem _container = default!;
-    [Dependency] private readonly EntityLookupSystem _lookup = default!;
     [Dependency] private readonly SharedMapSystem _map = default!;
     [Dependency] private readonly SharedUserInterfaceSystem _ui = default!;
     [Dependency] private readonly StationAiSystem _stationAi = default!;
@@ -49,7 +49,6 @@ public sealed class AiEyeSystem : EntitySystem
     private EntityQuery<MapGridComponent> _gridQuery;
     private readonly Dictionary<EntityUid, TimeSpan> _nextSearchTime = new();
     private readonly Dictionary<EntityUid, TimeSpan> _nextTargetJumpTime = new();
-    private readonly HashSet<Entity<ItemComponent>> _itemSearchCandidates = new();
     private readonly HashSet<EntityUid> _sensorTrackedUsers = new();
     private TimeSpan _nextSensorCacheRefresh;
 
@@ -172,6 +171,13 @@ public sealed class AiEyeSystem : EntitySystem
             return;
         }
 
+        if (args.Type == AiCameraSearchType.Items && query.Length < MinItemSearchLength)
+        {
+            state.Message = Loc.GetString("station-ai-camera-search-too-short", ("count", MinItemSearchLength));
+            _ui.SetUiState(ent.Owner, AICameraListUiKey.Key, state);
+            return;
+        }
+
         if (TryGetCooldown(_nextSearchTime, ent.Owner, out var remaining))
         {
             state.Message = Loc.GetString("station-ai-camera-search-cooldown", ("seconds", GetRemainingSeconds(remaining)));
@@ -192,6 +198,7 @@ public sealed class AiEyeSystem : EntitySystem
 
         if (state.Results.Count < MaxSearchResults &&
             checkedCandidates < MaxSearchCandidates &&
+            query.Length >= MinItemSearchLength &&
             args.Type is AiCameraSearchType.All or AiCameraSearchType.Items)
         {
             AddItemResults(ent.Owner, eyeGrid, query, state.Results, ref checkedCandidates);
@@ -238,11 +245,11 @@ public sealed class AiEyeSystem : EntitySystem
 
     private bool TryJumpToTarget(EntityUid ai, EntityUid target, bool showPopup = true)
     {
-        if (HasTrackingSuitSensors(target) && TryGetSensorTrackedCoordinates(ai, target, out var sensorCoordinates))
-            return TryMoveEye(ai, sensorCoordinates);
-
         if (!TryUseTargetJumpCooldown(ai, showPopup))
             return false;
+
+        if (HasTrackingSuitSensors(target) && TryGetSensorTrackedCoordinates(ai, target, out var sensorCoordinates))
+            return TryMoveEye(ai, sensorCoordinates);
 
         return TryJumpToVisibleTarget(ai, target, showPopup);
     }
@@ -421,24 +428,27 @@ public sealed class AiEyeSystem : EntitySystem
         List<AiCameraSearchResult> results,
         ref int checkedCandidates)
     {
-        if (eyeGrid == null || !_gridQuery.TryComp(eyeGrid.Value, out var mapGrid))
+        if (eyeGrid == null)
             return;
 
-        _itemSearchCandidates.Clear();
-        _lookup.GetLocalEntitiesIntersecting(eyeGrid.Value, mapGrid.LocalAABB, _itemSearchCandidates, SearchLookupFlags);
+        var matchedNames = 0;
+        var items = EntityQueryEnumerator<ItemComponent, MetaDataComponent, TransformComponent>();
 
-        foreach (var (uid, _) in _itemSearchCandidates)
+        while (items.MoveNext(out var uid, out _, out var meta, out var xform))
         {
             if (HasComp<ActorComponent>(uid))
                 continue;
 
-            if (Transform(uid).GridUid != eyeGrid)
+            if (xform.GridUid != eyeGrid)
                 continue;
 
-            var meta = MetaData(uid);
             var name = meta.EntityName;
             if (!MatchesSearch(name, query))
                 continue;
+
+            matchedNames++;
+            if (matchedNames > MaxItemNameMatches)
+                return;
 
             if (!TryAddSearchResult(ai, uid, name, AiCameraSearchResultType.Item, results, ref checkedCandidates))
                 return;

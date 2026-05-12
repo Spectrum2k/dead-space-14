@@ -17,6 +17,7 @@ using Content.Shared.Silicons.StationAi;
 using Robust.Server.GameObjects;
 using Robust.Shared.Player;
 using Robust.Shared.Timing;
+using Robust.Shared.Utility;
 
 namespace Content.Server.DeadSpace.StationAI.Systems;
 
@@ -95,7 +96,7 @@ public sealed class StationAiCentCommFaxSystem : EntitySystem
             ("station", stationName),
             ("time", shiftTime),
             ("date", date),
-            ("content", content));
+            ("content", FormattedMessage.EscapeText(content)));
 
         var stamps = new List<StampDisplayInfo>
         {
