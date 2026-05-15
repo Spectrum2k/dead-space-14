@@ -264,14 +264,24 @@ public sealed partial class DungeonSystem : SharedDungeonSystem
 
         _dungeonJobs.Add(job, cancelToken);
         _dungeonJobQueue.EnqueueJob(job);
-        await job.AsTask;
-
-        if (job.Exception != null)
+        // DS14-start
+        try
         {
-            throw job.Exception;
-        }
+            await job.AsTask;
 
-        return job.Result!;
+            if (job.Exception != null)
+            {
+                throw job.Exception;
+            }
+
+            return job.Result!;
+        }
+        finally
+        {
+            _dungeonJobs.Remove(job);
+            cancelToken.Dispose();
+        }
+        // DS14-end
     }
 
     public Angle GetDungeonRotation(int seed)
