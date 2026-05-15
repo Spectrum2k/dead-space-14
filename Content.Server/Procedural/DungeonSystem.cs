@@ -233,9 +233,14 @@ public sealed partial class DungeonSystem : SharedDungeonSystem
         EntityUid gridUid,
         MapGridComponent grid,
         Vector2i position,
-        int seed)
+        int seed,
+        CancellationToken cancellation = default) // DS14
     {
-        var cancelToken = new CancellationTokenSource();
+        // DS14-start
+        var cancelToken = cancellation.CanBeCanceled
+            ? CancellationTokenSource.CreateLinkedTokenSource(cancellation)
+            : new CancellationTokenSource();
+        // DS14-end
         var job = new DungeonJob.DungeonJob(
             Log,
             DungeonJobTime,
